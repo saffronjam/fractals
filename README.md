@@ -1,5 +1,5 @@
 # V-Fractals
-Visualizing Mandelbrot Set and Juliasets
+Visualizing Mandelbrot set and Julia sets
 
 <img src="https://github.com/viesa/V-Fractals/blob/master/preview0.png">
 <img src="https://github.com/viesa/V-Fractals/blob/master/preview1.png">
