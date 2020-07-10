@@ -1,9 +1,9 @@
 # V-Fractals
 Visualizing Mandelbrot Set and Juliasets
 
-<img src="https://github.com/viesa/V-Fractal/blob/master/preview0.png">
-<img src="https://github.com/viesa/V-Fractal/blob/master/preview1.png">
-<img src="https://github.com/viesa/V-Fractal/blob/master/previewGif0.png">
+<img src="https://github.com/viesa/V-Fractals/blob/master/preview0.png">
+<img src="https://github.com/viesa/V-Fractals/blob/master/preview1.png">
+<img src="https://github.com/viesa/V-Fractals/blob/master/previewGif0.png">
 
 ## Setting up
 Prerequisite: CLion with [Prebuilt 7.3.0 MinGW Compiler](https://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win64/Personal%20Builds/mingw-builds/7.3.0/threads-posix/seh/x86_64-7.3.0-release-posix-seh-rt_v5-rev0.7z/download)
@@ -18,7 +18,7 @@ Prerequisite: CLion with [Prebuilt 7.3.0 MinGW Compiler](https://sourceforge.net
 
 <b> 4. </b> Run <i>Client</i> in CLion
 
-<img src="https://github.com/viesa/V-Algorithms/blob/master/startCLion.png">
+<img src="https://github.com/viesa/V-Fractals/blob/master/startCLion.png">
 
 
 ### Windows
@@ -26,7 +26,7 @@ Prerequisite: CLion with [Prebuilt 7.3.0 MinGW Compiler](https://sourceforge.net
 
 <b> 4. </b> Run <i>Client</i> in CLion
 
-<img src="https://github.com/viesa/V-Algorithms/blob/master/startCLion.png">
+<img src="https://github.com/viesa/V-Fractals/blob/master/startCLion.png">
 
 ### Mac
 Should be similar to Linux
