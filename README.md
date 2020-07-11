@@ -15,9 +15,7 @@ Prerequisite: CLion with [Prebuilt 7.3.0 MinGW Compiler](https://sourceforge.net
 
 <b> 2. </b> Install Box2D using <i>sudo apt-get install libbox2d-dev</i>
 
-<b> 3. </b> Install CMake using <i>sudo apt-get install cmake</i>
-
-<b> 4. </b> Run <i>Client</i> in CLion
+<b> 3. </b> Run <i>Client</i> in CLion
 
 <img src="https://github.com/viesa/V-Fractals/blob/master/startCLion.png">
 
@@ -33,6 +31,8 @@ Should be similar to Linux
 
 ### Alternatively Visual Studio Code
 
-Follow previous steps, but start the application by running <i>Client</i> using CMake Tools plugin
+Follow previous steps, but make sure you have CMake installed.  
+  
+Start the application by running <i>Client</i> using <i>CMake Tools</i> plugin
 
 <img src="https://github.com/viesa/V-Algorithms/blob/master/startCMakeProject.png">
