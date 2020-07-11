@@ -23,9 +23,7 @@ Prerequisite: CLion with [Prebuilt 7.3.0 MinGW Compiler](https://sourceforge.net
 
 
 ### Windows
-<b> 1. </b> Download and install CMake
-
-<b> 2. </b> Run <i>Client</i> in CLion
+Run <i>Client</i> in CLion
 
 <img src="https://github.com/viesa/V-Fractals/blob/master/startCLion.png">
 
