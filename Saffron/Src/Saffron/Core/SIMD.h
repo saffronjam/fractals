@@ -99,7 +99,7 @@ typedef __m256d SIMD_Double;  //for doubles
 #define SIMD_SetZero() _mm256_setzero_pd()
 #define SIMD_SetOnei(x) _mm256_set1_epi64x(x)
 #define SIMD_SetZeroi(x) _mm256_setzero_epi64(x)
-#define SIMD_SetZero256i(x) _mm256_setzero_si256(x)
+#define SIMD_SetZero256i() _mm256_setzero_si256()
 #define SIMD_Add(x, y) _mm256_add_pd(x, y)
 #define SIMD_Sub(x, y) _mm256_sub_pd(x, y)
 #define SIMD_Addi(x, y) _mm256_add_epi64(x, y)

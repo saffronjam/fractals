@@ -102,8 +102,13 @@ project "Saffron"
 	links 
 	{
 		"SFML",
-		"ImGui",
-		"opengl32.lib",
+		"ImGui"
+	}	
+	
+	disablewarnings
+	{
+		"4244",
+		"4267"
 	}
 
 	filter "system:windows"
@@ -169,9 +174,19 @@ project "Project"
 
 	links 
 	{			
-		"SFML",
-		"Saffron",
-		"ImGui",
+		"Saffron"
+	}
+	
+	disablewarnings
+	{
+		"4244",
+		"4267"
+	}
+	
+	linkoptions 
+	{ 
+		"-IGNORE:4006",
+		"-IGNORE:4098" 
 	}
 	
 	postbuildcommands 

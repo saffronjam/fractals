@@ -7,7 +7,7 @@
 
 namespace Se
 {
-class LogSink : protected spdlog::sinks::sink
+class LogSink : public spdlog::sinks::sink
 {
 	friend class Log;
 

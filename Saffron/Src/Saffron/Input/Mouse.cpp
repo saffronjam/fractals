@@ -84,8 +84,10 @@ const sf::Vector2f &Mouse::GetPosition(bool normalized)
 		return _mousePosition;
 	}
 
-	const ImVec2 mousePos = ImGui::GetMousePos();
-	return { mousePos.x, mousePos.y };
+	const ImVec2 imMousePosition = ImGui::GetMousePos();
+	_mousePosition.x = imMousePosition.x;
+	_mousePosition.y = imMousePosition.y;
+	return _mousePosition;
 }
 
 const sf::Vector2f &Mouse::GetSwipe()
