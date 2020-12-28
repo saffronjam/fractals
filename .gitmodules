@@ -1,6 +1,3 @@
-[submodule "Deps/Box2D"]
-	path = Deps/Box2D
-	url = https://github.com/saffronjam/Box2D.git
 [submodule "Deps/entt"]
 	path = Deps/entt
 	url = https://github.com/saffronjam/entt.git

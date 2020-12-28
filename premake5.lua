@@ -34,7 +34,6 @@ SfmlLibs = "../Deps/SFML/lib"
 -- Include directories relative to root folder (solution directory)
 IncludeDir = {}
 IncludeDir["Saffron"] = "Saffron/Src"
-IncludeDir["Box2D"] = "Deps/Box2D/include"
 IncludeDir["entt"] = "Deps/entt/include"
 IncludeDir["ImGui"] = "Deps/ImGui"
 IncludeDir["SFML"] = "Deps/SFML/include"
@@ -56,7 +55,6 @@ outputDirectory = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 group "Engine"
 
 group "Engine/Dependencies"
-	include "Deps/Box2D/premake5"
 	include "Deps/entt/premake5"
 	include "Deps/ImGui/premake5"
 	include "Deps/SFML/premake5"
@@ -90,7 +88,6 @@ project "Saffron"
 	includedirs
 	{
 		"%{prj.name}/Src",
-		"%{IncludeDir.Box2D}",
 		"%{IncludeDir.entt}",
 		"%{IncludeDir.ImGui}",
 		"%{IncludeDir.SFML}",
@@ -105,9 +102,13 @@ project "Saffron"
 	links 
 	{
 		"SFML",
-		"Box2D",
-		"ImGui",
-		"opengl32.lib",
+		"ImGui"
+	}	
+	
+	disablewarnings
+	{
+		"4244",
+		"4267"
 	}
 
 	filter "system:windows"
@@ -160,7 +161,6 @@ project "Project"
 		"%{prj.name}/Src",
 		"Saffron/Src",
 		"%{IncludeDir.Saffron}",
-		"%{IncludeDir.Box2D}",
 		"%{IncludeDir.entt}",
 		"%{IncludeDir.ImGui}",
 		"%{IncludeDir.SFML}",
@@ -174,10 +174,19 @@ project "Project"
 
 	links 
 	{			
-		"SFML",
-		"Saffron",
-		"Box2D",
-		"ImGui",
+		"Saffron"
+	}
+	
+	disablewarnings
+	{
+		"4244",
+		"4267"
+	}
+	
+	linkoptions 
+	{ 
+		"-IGNORE:4006",
+		"-IGNORE:4098" 
 	}
 	
 	postbuildcommands 
