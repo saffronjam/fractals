@@ -161,7 +161,6 @@ void FractalSet::ComputeImage()
 
 		for ( size_t i = 0; i < _workers.size(); i++ )
 		{
-		    SE_CORE_INFO("Notifying worker: {}", i);
 			_workers[i]->imageTL = sf::Vector2<double>(imageSectionWidth * i, 0.0f);
 			_workers[i]->imageBR = sf::Vector2<double>(imageSectionWidth * static_cast<double>(i + 1), _simHeight);
 			_workers[i]->fractalTL = sf::Vector2<double>(_simBox.first.x + static_cast<double>(fractalSectionWidth * i), _simBox.first.y);
@@ -172,14 +171,8 @@ void FractalSet::ComputeImage()
 			_workers[i]->cvStart.notify_one();
 		}
 
-		int currentCollected = 0;
 		while ( _nWorkerComplete < _workers.size() ) // Wait for all workers to complete
 		{
-		    if(currentCollected != _nWorkerComplete)
-            {
-                SE_CORE_INFO("Collected {} workers", _nWorkerComplete);
-            }
-            currentCollected = _nWorkerComplete;
 		}
 		_recomputeImage = false;
 	}
