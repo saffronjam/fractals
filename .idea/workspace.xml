@@ -5,8 +5,8 @@
   </component>
   <component name="CMakeRunConfigurationManager" shouldGenerate="true" shouldDeleteObsolete="true">
     <generated>
-      <config projectName="PROJECT_NAME" targetName="Saffron" />
-      <config projectName="PROJECT_NAME" targetName="Client" />
+      <config projectName="Fractals" targetName="Saffron" />
+      <config projectName="Fractals" targetName="Client" />
     </generated>
   </component>
   <component name="CMakeSettings">
@@ -16,9 +16,7 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c5ea6cf2-d253-4d02-a3d2-0392725301bc" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
-    </list>
+    <list default="true" id="c5ea6cf2-d253-4d02-a3d2-0392725301bc" name="Default Changelist" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -42,6 +40,7 @@
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="cf.first.check.clang-format" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../Algorithms" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.detected.package.tslint" value="true" />
     <property name="node.js.path.for.package.eslint" value="project" />
