@@ -25,7 +25,7 @@ void Gui::Init(Filepath iniFilepath)
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
-    io.IniFilename = _iniFilepath.c_str();
+    io.IniFilename = "../../../imgui.ini";//reinterpret_cast<const char*>(_iniFilepath.c_str());
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
     //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking

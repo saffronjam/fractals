@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.1.0)
-project(PROJECT_NAME VERSION 0.1.0)
+project(Fractals VERSION 0.1.0)
 
 ### DIRECTORIES ###
 set(BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE}")

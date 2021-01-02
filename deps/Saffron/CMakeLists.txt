@@ -95,7 +95,7 @@ target_include_directories(Saffron PRIVATE ${SAFFRON_INCLUDE_DIRS})
 if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
     target_include_directories(Saffron PUBLIC ${SAFFRON_INCLUDE_DIRS_EXT})
     target_link_directories(Saffron PUBLIC
-            ${LIBRARY_DIR}/imgui/windows/lib
+            ${LIBRARY_DIR}/imgui/lib/windows
             ${LIBRARY_DIR}/SFML/lib
             )
     target_link_libraries(Saffron PUBLIC

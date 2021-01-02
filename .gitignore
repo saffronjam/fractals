@@ -56,4 +56,6 @@ Bin-Int/
 !deps/premake5/Bin/
 
 bin/
+!deps/Saffron/lib/SFML/bin
+!deps/Saffron/lib/Box2D/bin
 build/
