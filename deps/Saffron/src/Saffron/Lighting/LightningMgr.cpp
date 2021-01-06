@@ -97,7 +97,7 @@ void LightningMgr::RemoveLight(const Light::Ptr &light)
 
 void LightningMgr::RenderShadowMaps()
 {
-    /*const sf::FloatRect winRectAdjusted = Camera::ScreenToWorld(Lib::ConvertTo<float>(Application::Get().GetWindow().GetScreenRect()));
+    /*const sf::FloatRect winRectAdjusted = Camera::ScreenToWorld(GenUtils::ConvertTo<float>(Application::Get().GetWindow().GetScreenRect()));
     for ( auto &renderLight : _renderLights )
     {
         if ( renderLight.light->GetBoundingBox().intersects(winRectAdjusted) )
@@ -113,7 +113,7 @@ void LightningMgr::RenderShadowMaps()
 
 void LightningMgr::RenderLightMaps()
 {
-    /*const sf::FloatRect winRectAdjusted = Camera::ScreenToWorld(Lib::ConvertTo<float>(Application::Get().GetWindow().GetScreenRect()));
+    /*const sf::FloatRect winRectAdjusted = Camera::ScreenToWorld(GenUtils::ConvertTo<float>(Application::Get().GetWindow().GetScreenRect()));
     for ( auto &renderLight : _renderLights )
     {
         if ( renderLight.light->GetBoundingBox().intersects(winRectAdjusted) )
@@ -133,7 +133,7 @@ void LightningMgr::RenderLightMaps()
 
 void LightningMgr::RenderCollectiveLightMap()
 {
-    /*sf::FloatRect winRectAdjusted = Camera::ScreenToWorld(Lib::ConvertTo<float>(Application::Get().GetWindow().GetScreenRect()));
+    /*sf::FloatRect winRectAdjusted = Camera::ScreenToWorld(GenUtils::ConvertTo<float>(Application::Get().GetWindow().GetScreenRect()));
     _collectiveLightMap.clear(sf::Color(_ambient));
     for ( auto &renderLight : _renderLights )
     {

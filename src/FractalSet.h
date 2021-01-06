@@ -4,7 +4,6 @@
 #include <mutex>
 #include <atomic>
 #include <condition_variable>
-#include <complex>
 
 #include <SFML/Graphics/Image.hpp>
 #include <SFML/Graphics/Sprite.hpp>

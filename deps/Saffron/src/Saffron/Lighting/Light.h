@@ -20,7 +20,7 @@ public:
 	using Ptr = std::shared_ptr<Light>;
 
 protected:
-	void BuildBase(const sf::Vector2f &position, float radius, sf::Color color = sf::Color::White, const sf::Vector2f &direction = vl::Null<>(), float theta = 0.0f);
+	void BuildBase(const sf::Vector2f &position, float radius, sf::Color color = sf::Color::White, const sf::Vector2f &direction = VecUtils::Null<>(), float theta = 0.0f);
 
 public:
 	const sf::Vector2f &GetPosition() const { return _position; }

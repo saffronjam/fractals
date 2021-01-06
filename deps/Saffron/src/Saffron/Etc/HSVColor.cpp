@@ -10,7 +10,7 @@ HSVColor::HSVColor()
 }
 
 HSVColor::HSVColor(int hue, float saturation, float value)
-	: sf::Color(Lib::HSVtoRGB(hue, saturation, value)),
+	: sf::Color(GenUtils::HSVtoRGB(hue, saturation, value)),
 	_hue(hue),
 	_saturation(saturation), _value(value)
 {
@@ -22,7 +22,7 @@ HSVColor::HSVColor(sf::Uint8 r, sf::Uint8 g, sf::Uint8 b, sf::Uint8 a)
 }
 
 HSVColor::HSVColor(const sf::Color &color)
-	: HSVColor(Lib::RGBtoHSV(color))
+	: HSVColor(GenUtils::RGBtoHSV(color))
 {
 }
 
@@ -71,7 +71,7 @@ void HSVColor::SetValue(float value)
 
 void HSVColor::GenerateRGB()
 {
-	const auto color = Lib::HSVtoRGB(_hue, _saturation, _value);
+	const auto color = GenUtils::HSVtoRGB(_hue, _saturation, _value);
 	r = color.r;
 	g = color.g;
 	b = color.b;

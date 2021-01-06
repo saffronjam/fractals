@@ -65,7 +65,7 @@ void ViewportPane::OnGuiRender(bool *open, UUID uuid)
 
 	if ( _target->IsEnabled() )
 	{
-		Gui::Image(*_target, { viewportSize.x, viewportSize.y }, sf::FloatRect{ 0.0f, 0.0f, 1.0f, 1.0f });
+		Gui::Image(*_target, { viewportSize.x, viewportSize.y }, { 0.0f, 1.0f }, { 1.0f, 0.0f });
 	}
 	else
 	{
@@ -79,7 +79,7 @@ void ViewportPane::OnGuiRender(bool *open, UUID uuid)
 	ImGui::End();
 	ImGui::PopStyleVar();
 
-	if ( Lib::ConvertTo<unsigned int>(viewportSize) != _target->GetRenderTexture().getSize() )
+	if ( GenUtils::ConvertTo<unsigned int>(viewportSize) != _target->GetRenderTexture().getSize() )
 	{
 		GetSignals().Emit(Signals::OnWantRenderTargetResize, viewportSize);
 	}

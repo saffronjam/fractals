@@ -16,12 +16,20 @@ Scene::Scene(String name, ControllableRenderTexture *target, Camera *camera)
 
 void Scene::OnUpdate()
 {
-	_camera->OnUpdate();
+    if(_viewportPane.IsHovered())
+    {
+        _camera->OnUpdate();
+    }
 }
 
 void Scene::OnGuiRender()
 {
 	_viewportPane.OnGuiRender();
+}
+
+void Scene::OnRenderTargetResize(const sf::Vector2f &size)
+{
+    _camera->OnUpdate();
 }
 
 void Scene::Submit(const sf::Drawable &drawable, sf::RenderStates renderStates)
@@ -86,5 +94,4 @@ void Scene::Submit(const sf::Vector2f &first, const sf::Vector2f &second, sf::Co
 	line[1].position = second;
 	Submit(line);
 }
-
 }

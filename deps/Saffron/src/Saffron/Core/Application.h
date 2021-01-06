@@ -1,8 +1,9 @@
 #pragma once
 
 #include "Saffron/Base.h"
-#include "Saffron/Layer/LayerStack.h"
 #include "Saffron/Core/Window.h"
+#include "Saffron/Layer/LayerStack.h"
+#include "Saffron/Gui/FadePane.h"
 
 namespace Se
 {
@@ -39,8 +40,6 @@ public:
 	void EraseLayer(std::shared_ptr<Layer> layer);
 	void EraseOverlay(std::shared_ptr<Layer> overlay);
 
-	void RenderGui();
-
 	Window &GetWindow() { return _window; }
 
 	static Application &Get() { return *s_Instance; }
@@ -50,6 +49,8 @@ public:
 
 private:
 	bool OnWindowClose();
+
+	void RunSplashScreen();
 
 protected:
 	std::shared_ptr<BatchLoader> _preLoader;
@@ -65,6 +66,8 @@ private:
 	sf::Time _cachedSpf = sf::Time::Zero;
 	sf::Time _storedFrametime = sf::Time::Zero;
 	int _storedFrameCount = 0;
+
+	FadePane _fadeIn;
 
 	static Application *s_Instance;
 };

@@ -5,7 +5,7 @@
 
 namespace Se
 {
-sf::Vector2f Lib::Mid(const sf::ConvexShape &polygon)
+sf::Vector2f GenUtils::Mid(const sf::ConvexShape &polygon)
 {
 	const size_t nPoints = polygon.getPointCount();
 	sf::Vector2f total(0.0f, 0.0f);
@@ -14,7 +14,7 @@ sf::Vector2f Lib::Mid(const sf::ConvexShape &polygon)
 	return total / static_cast<float>(nPoints);
 }
 
-sf::Vector2f Lib::Mid(const std::vector<sf::Vector2f> &polygonPoints)
+sf::Vector2f GenUtils::Mid(const std::vector<sf::Vector2f> &polygonPoints)
 {
 	const size_t nPoints = polygonPoints.size();
 	if ( nPoints > 0 )
@@ -24,14 +24,14 @@ sf::Vector2f Lib::Mid(const std::vector<sf::Vector2f> &polygonPoints)
 			total += point;
 		return total / static_cast<float>(nPoints);
 	}
-	return vl::Null<>();
+	return VecUtils::Null<>();
 }
 
-void Lib::Rotate(sf::Transformable &transformable, const sf::Vector2f &direction)
+void GenUtils::Rotate(sf::Transformable &transformable, const sf::Vector2f &direction)
 {
 	const sf::Vector2f right(1.0f, 0.0f);
 
-	float angle = ToDegress(vl::Angle(right, direction));
+	float angle = ToDegress(VecUtils::Angle(right, direction));
 	if ( direction.y < 0.0f )
 	{
 		angle = 360.0f - angle;
@@ -39,7 +39,7 @@ void Lib::Rotate(sf::Transformable &transformable, const sf::Vector2f &direction
 	transformable.setRotation(angle);
 }
 
-sf::ConvexShape Lib::CreateConvexShape(const std::vector<sf::Vector2f> &points)
+sf::ConvexShape GenUtils::CreateConvexShape(const std::vector<sf::Vector2f> &points)
 {
 	std::vector<sf::Vector2f> usablePoints = WrapPoints(points);
 
@@ -54,7 +54,7 @@ sf::ConvexShape Lib::CreateConvexShape(const std::vector<sf::Vector2f> &points)
 	return finalShape;
 }
 
-sf::Color Lib::HSVtoRGB(int hue, float saturation, float value)
+sf::Color GenUtils::HSVtoRGB(int hue, float saturation, float value)
 {
 	hue %= 360;
 	while ( hue < 0 )
@@ -95,12 +95,12 @@ sf::Color Lib::HSVtoRGB(int hue, float saturation, float value)
 	}
 }
 
-sf::Color Lib::HSVtoRGB(const HSVColor &hsvColor)
+sf::Color GenUtils::HSVtoRGB(const HSVColor &hsvColor)
 {
 	return HSVtoRGB(hsvColor.GetHue(), hsvColor.GetSaturation(), hsvColor.GetValue());
 }
 
-HSVColor Lib::RGBtoHSV(sf::Uint8 r, sf::Uint8 g, sf::Uint8 b)
+HSVColor GenUtils::RGBtoHSV(sf::Uint8 r, sf::Uint8 g, sf::Uint8 b)
 {
 	const auto _r = r / 255.0f;
 	const auto _g = g / 255.0f;
@@ -144,7 +144,7 @@ HSVColor Lib::RGBtoHSV(sf::Uint8 r, sf::Uint8 g, sf::Uint8 b)
 	return HSVColor(hue, saturation, value);
 }
 
-HSVColor Lib::RGBtoHSV(const sf::Color &color)
+HSVColor GenUtils::RGBtoHSV(const sf::Color &color)
 {
 	return RGBtoHSV(color.r, color.g, color.b);
 }

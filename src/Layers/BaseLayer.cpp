@@ -1,4 +1,4 @@
-﻿#include "BaseLayer.h"
+﻿#include "Layers/BaseLayer.h"
 
 namespace Se
 {
@@ -32,9 +32,14 @@ void BaseLayer::OnDetach()
 {
 }
 
-void BaseLayer::OnFirstFrame()
+void BaseLayer::OnPreFrame()
 {
-	_scene.OnGuiRender();
+	_dockSpace.Begin();
+}
+
+void BaseLayer::OnPostFrame()
+{
+	_dockSpace.End();
 }
 
 void BaseLayer::OnUpdate()
@@ -57,11 +62,13 @@ void BaseLayer::OnUpdate()
 
 void BaseLayer::OnGuiRender()
 {
-	_dockSpace.OnGuiRender();
-	_camera.OnGuiRender();
-	_terminal.OnGuiRender();
+	if ( _viewSystem )
+	{
+		_camera.OnGuiRender();
+		_terminal.OnGuiRender();
+		Application::Get().OnGuiRender();
+	}
 	_scene.OnGuiRender();
-	Application::Get().OnGuiRender();
 }
 
 void BaseLayer::OnRenderTargetResize(const sf::Vector2f &newSize)

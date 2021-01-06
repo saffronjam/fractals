@@ -9,7 +9,7 @@
 
 namespace Se
 {
-class vl
+class VecUtils
 {
 public:
 	template <typename T>
@@ -80,7 +80,7 @@ public:
 };
 
 template <typename T>
-sf::Vector2<T> vl::LineMiddlePoint(const sf::Vector2<T> &point1, const sf::Vector2<T> &point2)
+sf::Vector2<T> VecUtils::LineMiddlePoint(const sf::Vector2<T> &point1, const sf::Vector2<T> &point2)
 {
 	sf::Vector2<T> delta = point2 - point1;
 	delta.x /= 2.0f;
@@ -89,34 +89,34 @@ sf::Vector2<T> vl::LineMiddlePoint(const sf::Vector2<T> &point1, const sf::Vecto
 }
 
 template <typename T>
-sf::Vector2<T> vl::Direction(const sf::Vector2<T> &point1, const sf::Vector2<T> &point2)
+sf::Vector2<T> VecUtils::Direction(const sf::Vector2<T> &point1, const sf::Vector2<T> &point2)
 {
-	return vl::Unit(point2 - point1);
+	return VecUtils::Unit(point2 - point1);
 }
 
 template <typename T>
-sf::Vector2<T> vl::Unit(const sf::Vector2<T> &vector)
+sf::Vector2<T> VecUtils::Unit(const sf::Vector2<T> &vector)
 {
-	if ( vector != vl::Null<T>() )
-		return vector / vl::Length(vector);
+	if ( vector != VecUtils::Null<T>() )
+		return vector / VecUtils::Length(vector);
 	else
-		return vl::Null<T>();
+		return VecUtils::Null<T>();
 }
 
 template <typename T>
-sf::Vector2<T> vl::Null()
+sf::Vector2<T> VecUtils::Null()
 {
 	return sf::Vector2<T>(0, 0);
 }
 
 template <typename T>
-sf::Vector2<T> vl::Perpendicular(const sf::Vector2<T> &vector)
+sf::Vector2<T> VecUtils::Perpendicular(const sf::Vector2<T> &vector)
 {
 	return sf::Vector2<T>(-vector.y, vector.x);
 }
 
 template <typename T>
-sf::Vector2<T> vl::Rotate(const sf::Vector2<T> &vector, float angle, const sf::Vector2<T> &around)
+sf::Vector2<T> VecUtils::Rotate(const sf::Vector2<T> &vector, float angle, const sf::Vector2<T> &around)
 {
 	auto anchor = vector - around;
 
@@ -130,40 +130,40 @@ sf::Vector2<T> vl::Rotate(const sf::Vector2<T> &vector, float angle, const sf::V
 }
 
 template <typename T>
-sf::Vector2<T> vl::Rotate(const sf::Vector2<T> &vector, const sf::Vector2f &direction, const sf::Vector2<T> &around)
+sf::Vector2<T> VecUtils::Rotate(const sf::Vector2<T> &vector, const sf::Vector2f &direction, const sf::Vector2<T> &around)
 {
 	const sf::Vector2f right(1.0f, 0.0f);
 
-	float angle = vl::Angle(right, direction);
+	float angle = VecUtils::Angle(right, direction);
 	if ( direction.y > 0.0f )
 	{
 		angle = 360.0f - angle;
 	}
-	return vl::Rotate(vector, angle, around);
+	return VecUtils::Rotate(vector, angle, around);
 }
 
 template <typename T>
-float vl::Length(const sf::Vector2<T> &vector)
+float VecUtils::Length(const sf::Vector2<T> &vector)
 {
-	return sqrt(vl::LengthSq(vector));
+	return sqrt(VecUtils::LengthSq(vector));
 }
 
 template <typename T>
-float vl::LengthSq(const sf::Vector2<T> &vector)
+float VecUtils::LengthSq(const sf::Vector2<T> &vector)
 {
 	return vector.x * vector.x + vector.y * vector.y;
 }
 
 template <typename T>
-float vl::Distance(const sf::Vector2<T> &u, const sf::Vector2<T> &v)
+float VecUtils::Distance(const sf::Vector2<T> &u, const sf::Vector2<T> &v)
 {
 	return sqrt(pow(u.x - v.x, 2) + pow(u.y - v.y, 2));
 }
 
 template <typename T>
-void vl::Normalize(sf::Vector2<T> &vector)
+void VecUtils::Normalize(sf::Vector2<T> &vector)
 {
-	float length = vl::Length(vector);
+	float length = VecUtils::Length(vector);
 	if ( length != 0.0f )
 	{
 		vector.x /= length;
@@ -172,19 +172,19 @@ void vl::Normalize(sf::Vector2<T> &vector)
 }
 
 template <typename T>
-sf::Vector2<T> vl::SetLength(const sf::Vector2<T> &vector, float length)
+sf::Vector2<T> VecUtils::SetLength(const sf::Vector2<T> &vector, float length)
 {
-	return vl::Unit(vector) * length;
+	return VecUtils::Unit(vector) * length;
 }
 
 template <typename T>
-float vl::Angle(const sf::Vector2<T> &v1, const sf::Vector2<T> &v2)
+float VecUtils::Angle(const sf::Vector2<T> &v1, const sf::Vector2<T> &v2)
 {
-	return std::acos(vl::Dot(v1, v2) / (vl::Length(v1) * vl::Length(v2)));
+	return std::acos(VecUtils::Dot(v1, v2) / (VecUtils::Length(v1) * VecUtils::Length(v2)));
 }
 
 template <typename T>
-float vl::Slope(sf::Vector2<T> point1, sf::Vector2<T> point2)
+float VecUtils::Slope(sf::Vector2<T> point1, sf::Vector2<T> point2)
 {
 	if ( point1.x > point2.x )
 	{
@@ -194,19 +194,19 @@ float vl::Slope(sf::Vector2<T> point1, sf::Vector2<T> point2)
 }
 
 template <typename T>
-float vl::DistanceFromLine(sf::Vector2<T> linePoint1, sf::Vector2<T> linePoint2, sf::Vector2<T> point)
+float VecUtils::DistanceFromLine(sf::Vector2<T> linePoint1, sf::Vector2<T> linePoint2, sf::Vector2<T> point)
 {
-	return abs(((linePoint2.x - linePoint1.x) * (point.y - linePoint1.y) - (linePoint2.y - linePoint1.y) * (point.x - linePoint1.x)) / vl::Length(linePoint2 - linePoint1));
+	return abs(((linePoint2.x - linePoint1.x) * (point.y - linePoint1.y) - (linePoint2.y - linePoint1.y) * (point.x - linePoint1.x)) / VecUtils::Length(linePoint2 - linePoint1));
 }
 
 template <typename T>
-T vl::Dot(const sf::Vector2<T> &u, const sf::Vector2<T> &v)
+T VecUtils::Dot(const sf::Vector2<T> &u, const sf::Vector2<T> &v)
 {
 	return u.x * v.x + u.y * v.y;
 }
 
 template <typename T>
-sf::Vector2<T> vl::MapRange(const sf::Vector2<T> &v, T a1, T b1, T a2, T b2)
+sf::Vector2<T> VecUtils::MapRange(const sf::Vector2<T> &v, T a1, T b1, T a2, T b2)
 {
 	T x = (v.x - a1) * (b2 - a2) / (b1 - a1) + a2;
 	T y = (v.y - a1) * (b2 - a2) / (b1 - a1) + a2;
@@ -214,7 +214,7 @@ sf::Vector2<T> vl::MapRange(const sf::Vector2<T> &v, T a1, T b1, T a2, T b2)
 }
 
 template <typename T>
-sf::Vector3<T> vl::MapRange(const sf::Vector3<T> &v, T a1, T b1, T a2, T b2)
+sf::Vector3<T> VecUtils::MapRange(const sf::Vector3<T> &v, T a1, T b1, T a2, T b2)
 {
 	T x = (v.x - a1) * (b2 - a2) / (b1 - a1) + a2;
 	T y = (v.y - a1) * (b2 - a2) / (b1 - a1) + a2;
@@ -223,33 +223,33 @@ sf::Vector3<T> vl::MapRange(const sf::Vector3<T> &v, T a1, T b1, T a2, T b2)
 }
 
 template <typename T>
-sf::Vector3<T> vl::ByColor(const sf::Color &color)
+sf::Vector3<T> VecUtils::ByColor(const sf::Color &color)
 {
 	return sf::Vector3<T>((T)color.r, (T)color.g, (T)color.b);
 }
 
 template <typename T, typename U>
-T vl::ConvertTo(const U &in)
+T VecUtils::ConvertTo(const U &in)
 {
 	return T(in.x, in.y);
 }
 
 template <typename T>
-bool vl::IsLeft(const sf::Vector2<T> &a, const sf::Vector2<T> &b, const sf::Vector2<T> &point)
+bool VecUtils::IsLeft(const sf::Vector2<T> &a, const sf::Vector2<T> &b, const sf::Vector2<T> &point)
 {
 	return (b.x - a.x) * (point.y - a.y) - (b.y - a.y) * (point.x - a.x) < 0.0f;
 }
 
 template <typename T>
-sf::Vector2<T> vl::Constrain(const sf::Vector2<T> &vector, T from, T to)
+sf::Vector2<T> VecUtils::Constrain(const sf::Vector2<T> &vector, T from, T to)
 {
-	if ( vl::Length(vector) < from )
+	if ( VecUtils::Length(vector) < from )
 	{
-		return vl::Unit(vector) * from;
+		return VecUtils::Unit(vector) * from;
 	}
-	else if ( vl::Length(vector) > to )
+	else if ( VecUtils::Length(vector) > to )
 	{
-		return vl::Unit(vector) * to;
+		return VecUtils::Unit(vector) * to;
 	}
 	return vector;
 }

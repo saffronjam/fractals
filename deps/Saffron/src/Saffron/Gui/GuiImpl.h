@@ -58,6 +58,7 @@ void Image(const sf::Texture &texture, const sf::Color &tintColor = sf::Color::W
 void Image(const sf::Texture &texture, const sf::Vector2f &size, const sf::Color &tintColor = sf::Color::White, const sf::Color &borderColor = sf::Color::Transparent);
 void Image(const sf::Texture &texture, const sf::FloatRect &uvRect, const sf::Color &tintColor = sf::Color::White, const sf::Color &borderColor = sf::Color::Transparent);
 void Image(const sf::Texture &texture, const sf::Vector2f &size, const sf::FloatRect &uvRect, const sf::Color &tintColor = sf::Color::White, const sf::Color &borderColor = sf::Color::Transparent);
+void Image(const sf::Texture &texture, const sf::Vector2f &size, const sf::Vector2f &uv0, const sf::Vector2f &uv1, const sf::Color &tintColor, const sf::Color &borderColor);
 
 void Image(const sf::Sprite &sprite, const sf::Color &tintColor = sf::Color::White, const sf::Color &borderColor = sf::Color::Transparent);
 void Image(const sf::Sprite &sprite, const sf::Vector2f &size, const sf::Color &tintColor = sf::Color::White, const sf::Color &borderColor = sf::Color::Transparent);

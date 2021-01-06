@@ -1,31 +1,12 @@
 ﻿#pragma once
 
-#include "Saffron/Gui/Gui.h"
-
+namespace Se
+{
 class DockSpace
 {
 public:
-	void OnGuiRender()
-	{
-		auto *viewport = ImGui::GetMainViewport();
+	void Begin() const;
 
-		ImGui::SetNextWindowPos(viewport->GetWorkPos());
-		ImGui::SetNextWindowSize(viewport->GetWorkSize());
-		ImGui::SetNextWindowViewport(viewport->ID);
-
-		ImGuiWindowFlags hostWindowFlags = 0;
-		hostWindowFlags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking;
-		hostWindowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
-		hostWindowFlags |= ImGuiWindowFlags_NoBackground;
-
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0.0f, 0.0f });
-		ImGui::Begin("DockSpaceViewport_%08X", nullptr, hostWindowFlags);
-		ImGui::PopStyleVar(3);
-
-		const auto dockspaceId = ImGui::GetID("DockSpace");
-		ImGui::DockSpace(dockspaceId, { 0.0f, 0.0f }, ImGuiDockNodeFlags_None);
-		ImGui::End();
-	}
+	void End();
 };
+}

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <complex>
+
 #include <Saffron.h>
 
 #include "FractalSet.h"

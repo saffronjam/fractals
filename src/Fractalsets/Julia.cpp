@@ -162,10 +162,17 @@ void Julia::JuliaWorker::Compute()
 				if ( SIMD_SignMask(SIMD_CastToFloat(_mask2)) > 0 )
 					goto repeat;
 
+#if defined(__MINGW32__) 
 				fractalArray[y_offset + x + 0] = static_cast<int>(_n[3]);
 				fractalArray[y_offset + x + 1] = static_cast<int>(_n[2]);
 				fractalArray[y_offset + x + 2] = static_cast<int>(_n[1]);
 				fractalArray[y_offset + x + 3] = static_cast<int>(_n[0]);
+#elif defined (_MSC_VER)
+				fractalArray[y_offset + x + 0] = static_cast<int>(_n.m256i_i64[3]);
+				fractalArray[y_offset + x + 1] = static_cast<int>(_n.m256i_i64[2]);
+				fractalArray[y_offset + x + 2] = static_cast<int>(_n.m256i_i64[1]);
+				fractalArray[y_offset + x + 3] = static_cast<int>(_n.m256i_i64[0]);
+#endif
 
 				_x_pos = SIMD_Add(_x_pos, _x_jump);
 			}

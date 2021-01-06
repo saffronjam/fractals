@@ -9,7 +9,7 @@ FractalSet::FractalSet(String name, Type type, sf::Vector2f renderSize) :
 	_nWorkerComplete(0),
 	_simWidth(renderSize.x),
 	_simHeight(renderSize.y),
-	_simBox(vl::Null<>(), vl::Null<>()),
+	_simBox(VecUtils::Null<>(), VecUtils::Null<>()),
 	_vertexArray(sf::PrimitiveType::Points, _simWidth *_simHeight),
 	_fractalArray(new int[_simWidth * _simHeight]),
 	_vertexArrayDimensions(renderSize),
