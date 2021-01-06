@@ -75,6 +75,7 @@ void BatchLoader::Reset()
 	ScopedLock scopedLock(_executionMutex);
 	ForceExit();
 	_queue.clear();
+	_noJobsDone = 0;
 	_progress = 0.0f;
 	_shouldExit = false;
 }

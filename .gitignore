@@ -13,7 +13,6 @@ _ReSharper*
 *.vcxproj*
 *.sln
 .vs
-CMakeSettings.json
 Win32
 MinSizeRel
 RelWithDebInfo
@@ -42,20 +41,11 @@ RelWithDebInfo
 
 # Executables
 *.exe
-!Deps/premake5/Bin/premake5.exe
 *.out
 *.app
 
 # Build directory
-Saffron/bin/
-
-# Folders
-.vs/
-Bin/
-Bin-Int/
-!deps/premake5/Bin/
-
-bin/
-!deps/Saffron/lib/SFML/bin
-!deps/Saffron/lib/Box2D/bin
+/Saffron/bin/
+/bin/
 build/
+out/

@@ -35,7 +35,7 @@ void Camera::OnUpdate()
 		if ( Mouse::IsDown(sf::Mouse::Button::Left) && Mouse::IsDown(sf::Mouse::Button::Right) )
 		{
 			sf::Vector2f delta = Mouse::GetSwipe();
-			if ( vl::LengthSq(delta) > 0.0f )
+			if ( VecUtils::LengthSq(delta) > 0.0f )
 			{
 				delta = _rotationTransform.getInverse().transformPoint(delta);
 				delta = _zoomTransform.getInverse().transformPoint(delta);
@@ -70,18 +70,18 @@ void Camera::OnGuiRender()
 	if ( ImGui::Begin("Camera") )
 	{
 		Gui::BeginPropertyGrid();
-		Gui::Property("Position", _position, -10000.0f, 10000.0f, 10.0f, Gui::PropertyFlag::Drag);
-		if ( Gui::Property("Zoom", _zoom.x, 0.01f, 10.0f, 0.01f, Gui::PropertyFlag::Slider) )
+		Gui::Property("Position", _position, -10000.0f, 10000.0f, 10.0f, Gui::PropertyFlag_Drag);
+		if ( Gui::Property("Zoom", _zoom.x, 0.01f, 10.0f, 0.01f, Gui::PropertyFlag_Slider) )
 		{
 			_zoom.y = _zoom.x;
 		}
-		Gui::Property("Rotation", _rotation, -180.0f, 180.0f, 1.0f, Gui::PropertyFlag::Slider);
-		Gui::Property("Rotation Speed", _rps, 0.0f, 10.0f, 0.1f, Gui::PropertyFlag::Slider);
+		Gui::Property("Rotation", _rotation, -180.0f, 180.0f, 1.0f, Gui::PropertyFlag_Slider);
+		Gui::Property("Rotation Speed", _rps, 0.0f, 10.0f, 0.1f, Gui::PropertyFlag_Slider);
 
 		if ( _follow.has_value() )
 		{
 			auto follow = *_follow.value();
-			Gui::Property("Follow", follow, Gui::PropertyFlag::Drag);
+			Gui::Property("Follow", follow, Gui::PropertyFlag_Drag);
 		}
 		else
 		{
@@ -179,10 +179,10 @@ void Camera::UpdateTransform()
 	_transform.translate(-_position);
 }
 
-void Camera::CapZoomLevel()
+void Camera::CapZoomLevel() const
 {
-	Lib::Constrain(_zoom.x, 0.9f, 3.0f);
-	Lib::Constrain(_zoom.y, 0.9f, 3.0f);
+	GenUtils::Constrain(_zoom.x, 0.9f, 3.0f);
+	GenUtils::Constrain(_zoom.y, 0.9f, 3.0f);
 }
 
 void Camera::ResetTransformation()

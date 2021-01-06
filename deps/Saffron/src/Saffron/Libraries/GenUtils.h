@@ -14,12 +14,12 @@ namespace Se
 #define GET_VARIABLE_NAME(Variable) (#Variable)
 
 template <typename T = float>
-static constexpr T PI = (T)3.141592653589793238462643383279;
+static constexpr T PI = static_cast<T>(3.141592653589793238462643383279);
 
 template <typename T = float>
-static constexpr T E = (T)2.71828182845904523536;
+static constexpr T E = static_cast<T>(2.71828182845904523536);
 
-class Lib
+class GenUtils
 {
 public:
 	template <typename T, typename U>
@@ -86,25 +86,25 @@ private:
 };
 
 template <typename T, typename U>
-sf::Vector2<T> Lib::ConvertTo(const sf::Vector2<U> &vec)
+sf::Vector2<T> GenUtils::ConvertTo(const sf::Vector2<U> &vec)
 {
 	return sf::Vector2<T>((T)vec.x, (T)vec.y);
 }
 
 template <typename T, typename U>
-sf::Rect<T> Lib::ConvertTo(const sf::Rect<U> &rect)
+sf::Rect<T> GenUtils::ConvertTo(const sf::Rect<U> &rect)
 {
 	return sf::Rect<T>((T)rect.left, (T)rect.top, (T)rect.width, (T)rect.height);
 }
 
 template <typename T>
-sf::Vector2<T> Lib::Mid(sf::Rect<T> rect)
+sf::Vector2<T> GenUtils::Mid(sf::Rect<T> rect)
 {
 	return sf::Vector2<T>(rect.left + rect.width / (T)2, rect.top + rect.height / (T)2);
 }
 
 template <typename T>
-sf::Vector2<T> Lib::MapPoint(const sf::Vector2<T> &point, sf::Rect<T> from, sf::Rect<T> to)
+sf::Vector2<T> GenUtils::MapPoint(const sf::Vector2<T> &point, sf::Rect<T> from, sf::Rect<T> to)
 {
 	sf::Vector2<T> _point = point;
 	float x_diff = _point.x - from.left;
@@ -120,7 +120,7 @@ sf::Vector2<T> Lib::MapPoint(const sf::Vector2<T> &point, sf::Rect<T> from, sf::
 }
 
 template <typename T>
-T Lib::Map(const T &value, T lowerFrom, T upperFrom, T lowerTo, T upperTo)
+T GenUtils::Map(const T &value, T lowerFrom, T upperFrom, T lowerTo, T upperTo)
 {
 	if ( upperFrom < lowerFrom )
 	{
@@ -140,13 +140,13 @@ T Lib::Map(const T &value, T lowerFrom, T upperFrom, T lowerTo, T upperTo)
 }
 
 template <typename T>
-T Lib::Map(const T &value, std::pair<T, T> from, std::pair<T, T> to)
+T GenUtils::Map(const T &value, std::pair<T, T> from, std::pair<T, T> to)
 {
-	return Lib::Map(value, from.first, from.second, to.first, to.second);
+	return GenUtils::Map(value, from.first, from.second, to.first, to.second);
 }
 
 template <typename T>
-T Lib::Constrain(const T &value, T from, T to)
+T GenUtils::Constrain(const T &value, T from, T to)
 {
 	if ( value < from )
 		return from;
@@ -156,31 +156,31 @@ T Lib::Constrain(const T &value, T from, T to)
 }
 
 template <typename T>
-void Lib::Clamp(T &value, T from, T to)
+void GenUtils::Clamp(T &value, T from, T to)
 {
 	value = Clamped(value, from, to);
 }
 
 template <typename T>
-T Lib::Clamped(const T &value, T from, T to)
+T GenUtils::Clamped(const T &value, T from, T to)
 {
 	return std::clamp(value, from, to);
 }
 
 template <typename T>
-T Lib::ToDegress(const T &radians)
+T GenUtils::ToDegress(const T &radians)
 {
 	return (radians * (T)180) / (T)PI<>;
 }
 
 template <typename T>
-T Lib::ToRadians(const T &degress)
+T GenUtils::ToRadians(const T &degress)
 {
 	return (T)(degress * PI<>) / (T)180;
 }
 
 template <typename T>
-sf::Color Lib::ValueToSpectrum(T value, T maxValue)
+sf::Color GenUtils::ValueToSpectrum(T value, T maxValue)
 {
 	const double a = ((double)value / (double)maxValue) / 0.2f;
 	const sf::Uint8 X = std::floor(a);
@@ -200,12 +200,12 @@ sf::Color Lib::ValueToSpectrum(T value, T maxValue)
 	case 5:
 		return sf::Color(255, 0, 255);
 	default:
-		break;
+		return sf::Color::White;
 	}
 };
 
 template <typename T>
-std::vector<sf::Vector2<T>> Lib::WrapPoints(const std::vector<sf::Vector2<T>> &points)
+std::vector<sf::Vector2<T>> GenUtils::WrapPoints(const std::vector<sf::Vector2<T>> &points)
 {
 	std::vector<sf::Vector2f> finalPoints;
 
@@ -235,7 +235,7 @@ std::vector<sf::Vector2<T>> Lib::WrapPoints(const std::vector<sf::Vector2<T>> &p
 	//Inital removal of center-points
 	for ( auto &point : points )
 	{
-		if ( !vl::IsLeft(startLine.first, startLine.second, point) )
+		if ( !VecUtils::IsLeft(startLine.first, startLine.second, point) )
 		{
 			topPoints.emplace_back(point);
 		}
@@ -252,16 +252,16 @@ std::vector<sf::Vector2<T>> Lib::WrapPoints(const std::vector<sf::Vector2<T>> &p
 }
 
 template <typename T>
-void Lib::ClearPointsRecursively(const std::pair<sf::Vector2<T>, sf::Vector2<T>> &line,
-								 const std::vector<sf::Vector2<T>> &points,
-								 std::vector<sf::Vector2<T>> &finalPoints)
+void GenUtils::ClearPointsRecursively(const std::pair<sf::Vector2<T>, sf::Vector2<T>> &line,
+									  const std::vector<sf::Vector2<T>> &points,
+									  std::vector<sf::Vector2<T>> &finalPoints)
 {
 	//Find the point which is the furthest away
 	float biggestDistance = 0.0f;
 	int biggestIndex = -1;
 	for ( size_t i = 0; i < points.size(); i++ )
 	{
-		const float currentCheck = vl::DistanceFromLine(line.first, line.second, points[i]);
+		const float currentCheck = VecUtils::DistanceFromLine(line.first, line.second, points[i]);
 		if ( currentCheck > biggestDistance )
 		{
 			biggestDistance = currentCheck;
@@ -281,11 +281,11 @@ void Lib::ClearPointsRecursively(const std::pair<sf::Vector2<T>, sf::Vector2<T>>
 		std::vector<sf::Vector2f> consideredPoints2;
 		for ( auto &point : points )
 		{
-			if ( !vl::IsLeft(newLine.first, newLine.second, point) )
+			if ( !VecUtils::IsLeft(newLine.first, newLine.second, point) )
 			{
 				consideredPoints1.push_back(point);
 			}
-			else if ( !vl::IsLeft(lineCpy.first, lineCpy.second, point) )
+			else if ( !VecUtils::IsLeft(lineCpy.first, lineCpy.second, point) )
 			{
 				consideredPoints2.push_back(point);
 			}

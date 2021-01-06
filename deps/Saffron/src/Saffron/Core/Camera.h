@@ -48,14 +48,14 @@ public:
 	const sf::Transform &GetTransform() const { return _transform; }
 	Pair<sf::Vector2f, sf::Vector2f> GetViewport() const;
 	sf::Vector2f GetOffset() const;
-	float GetZoom() { return _zoom.x; }
+	float GetZoom() const { return _zoom.x; }
 
 	void SetViewportSize(const sf::Vector2f &viewportSize) { _viewportSize = viewportSize; }
 	void SetRotationSpeed(float rps) { _rps = rps; }
 
 private:
 	void UpdateTransform();
-	void CapZoomLevel();
+	void CapZoomLevel() const;
 	void ResetTransformation();
 
 private:

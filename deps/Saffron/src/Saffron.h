@@ -23,6 +23,9 @@
 #include "Saffron/Libraries/GenUtils.h"
 #include "Saffron/Libraries/VecUtils.h"
 
+#include "Saffron/Math/SaffronMath.h"
+#include "Saffron/Math/Random.h"
+
 #include "Saffron/Resource/FontStore.h"
 #include "Saffron/Resource/ImageStore.h"
 #include "Saffron/Resource/MusicStore.h"

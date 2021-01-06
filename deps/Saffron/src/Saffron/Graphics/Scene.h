@@ -17,6 +17,7 @@ public:
 
 	void OnUpdate();
 	void OnGuiRender();
+	void OnRenderTargetResize(const sf::Vector2f& size);
 
 	void ActivateScreenSpaceDrawing() { _screenSpaceDrawing = true; }
 	void DeactivateScreenSpaceDrawing() { _screenSpaceDrawing = false; }

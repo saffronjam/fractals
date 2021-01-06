@@ -16,7 +16,7 @@ class Window
 
 public:
 	Window(const std::string &title, int width, int height);
-	~Window();
+	~Window() = default;
 	Window(const Window &) = delete;
 	Window &operator=(const Window &) = delete;
 

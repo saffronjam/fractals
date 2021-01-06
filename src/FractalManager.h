@@ -1,8 +1,6 @@
 #pragma once
 
-#include <string>
-#include <map>
-#include <mutex>
+#include <complex>
 
 #include "Fractalsets/Mandelbrot.h"
 #include "Fractalsets/Julia.h"
@@ -36,7 +34,7 @@ private:
 
 	Pair<sf::Vector2f, sf::Vector2f> _lastViewport;
 
-	sf::Vector2f _viewportMousePosition = vl::Null<>();
+	sf::Vector2f _viewportMousePosition = VecUtils::Null<>();
 
 	//// Gui cache ////
 	ArrayList<const char *> _fractalSetComboBoxNames;
@@ -50,6 +48,6 @@ private:
 
 	// Julia
 	int _juliaStateInt = static_cast<int>(Julia::State::None);
-	sf::Vector2f _juliaC = vl::Null<>();
+	sf::Vector2f _juliaC = VecUtils::Null<>();
 };
 }

@@ -6,7 +6,7 @@
 namespace Se
 {
 
-static Random<Uint64> sRandom(0, std::numeric_limits<Uint64>::max());
+static RandomGenerator<Uint64> sRandom(0, std::numeric_limits<Uint64>::max());
 
 
 UUID::UUID()

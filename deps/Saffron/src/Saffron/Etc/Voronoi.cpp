@@ -96,7 +96,7 @@
 //	Voronoi::Polygon* closest = nullptr;
 //	for (auto& polygon : _polygons)
 //	{
-//		float distance = vl::LengthSq(polygon.getVoronoiPoint() - position);
+//		float distance = VecUtils::LengthSq(polygon.getVoronoiPoint() - position);
 //		if (distance < minDistance)
 //		{
 //			minDistance = distance;
@@ -144,7 +144,7 @@
 //				polygonPoints.emplace_back(edge->pos[0].x, edge->pos[0].y);
 //			}
 //			sf::ConvexShape convexShape = Lib::CreateConvexShape(polygonPoints);
-//			Voronoi::Polygon polygon(convexShape, vl::ConvertTo<sf::Vector2f>(site->p));
+//			Voronoi::Polygon polygon(convexShape, VecUtils::ConvertTo<sf::Vector2f>(site->p));
 //			polygon.setFillColor(_fillColors[i % _fillColors.size()]);
 //			polygon.setOutlineColor(sf::Color::White);
 //			polygon.setOutlineThickness(1);
@@ -160,7 +160,7 @@
 //			{
 //				if (edge->neighbor)
 //				{
-//					Voronoi::Polygon& neighbor = GetPolygon(vl::ConvertTo<sf::Vector2f>(edge->neighbor->p));
+//					Voronoi::Polygon& neighbor = GetPolygon(VecUtils::ConvertTo<sf::Vector2f>(edge->neighbor->p));
 //					_polygons[i].addNeighbor(&neighbor);
 //				}
 //			}

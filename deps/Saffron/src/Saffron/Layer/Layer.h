@@ -14,8 +14,13 @@ public:
 
 	virtual void OnAttach(std::shared_ptr<BatchLoader> &loader) {}
 	virtual void OnDetach() {}
+
+	virtual void OnPreFrame() {}
+	virtual void OnPostFrame() {}
+
 	virtual void OnUpdate() {}
 	virtual void OnGuiRender() {}
+
 	virtual void OnEvent(const sf::Event &event) {}
 
 	const String &GetName() const { return _debugName; }

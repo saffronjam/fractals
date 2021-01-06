@@ -156,11 +156,11 @@ String DateTime::ANSIDateString() const
 
 void DateTime::Clamp()
 {
-	Lib::Clamp(_date.Seconds, 0, 59);
-	Lib::Clamp(_date.Seconds, 0, 59);
-	Lib::Clamp(_date.Hour, 0, 23);
-	Lib::Clamp(_date.Weekday, 0, 6);
-	Lib::Clamp(_date.Day, 0, 30);
-	Lib::Clamp(_date.Month, 0, 11);
+	GenUtils::Clamp(_date.Seconds, 0, 59);
+	GenUtils::Clamp(_date.Seconds, 0, 59);
+	GenUtils::Clamp(_date.Hour, 0, 23);
+	GenUtils::Clamp(_date.Weekday, 0, 6);
+	GenUtils::Clamp(_date.Day, 0, 30);
+	GenUtils::Clamp(_date.Month, 0, 11);
 }
 }

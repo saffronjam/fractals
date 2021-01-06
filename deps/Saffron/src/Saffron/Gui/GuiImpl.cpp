@@ -629,19 +629,29 @@ void Image(const sf::Texture &texture, const sf::Vector2f &size,
 void Image(const sf::Texture &texture, const sf::FloatRect &uvRect,
 		   const sf::Color &tintColor, const sf::Color &borderColor)
 {
-	Image(texture, Se::Lib::ConvertTo<float>(texture.getSize()), uvRect, tintColor, borderColor);
+	Image(texture, Se::GenUtils::ConvertTo<float>(texture.getSize()), uvRect, tintColor, borderColor);
 }
 
 void Image(const sf::Texture &texture, const sf::Vector2f &size,
 		   const sf::FloatRect &uvRect, const sf::Color &tintColor,
 		   const sf::Color &borderColor)
 {
-	const ImVec2 uv0(uvRect.left, uvRect.top + uvRect.height);
-	const ImVec2 uv1(uvRect.left + uvRect.width, uvRect.top);
+	const sf::Vector2f uv0(uvRect.left, uvRect.top);
+	const sf::Vector2f uv1(uvRect.left + uvRect.width, uvRect.top + uvRect.height);
+
+	Image(texture, size, uv0, uv1, tintColor, borderColor);
+}
+
+void Image(const sf::Texture &texture, const sf::Vector2f &size,
+		   const sf::Vector2f &uv0, const sf::Vector2f &uv1,
+		   const sf::Color &tintColor, const sf::Color &borderColor)
+{
+	const ImVec2 imUv0(uv0.x, uv0.y);
+	const ImVec2 imUv1(uv1.x, uv1.y);
 
 	const ImTextureID textureID =
 		convertGLTextureHandleToImTextureID(texture.getNativeHandle());
-	ImGui::Image(textureID, ImVec2(size.x, size.y), uv0, uv1, toImColor(tintColor),
+	ImGui::Image(textureID, ImVec2(size.x, size.y), imUv0, imUv1, toImColor(tintColor),
 				 toImColor(borderColor));
 }
 

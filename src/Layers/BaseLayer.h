@@ -18,7 +18,9 @@ public:
 	void OnAttach(std::shared_ptr<BatchLoader> &loader) override;
 	void OnDetach() override;
 
-	void OnFirstFrame();
+	void OnPreFrame() override;
+	void OnPostFrame() override;
+
 	void OnUpdate() override;
 	void OnGuiRender() override;
 
@@ -35,9 +37,12 @@ protected:
 	Terminal _terminal;
 	DockSpace _dockSpace;
 
+	bool _viewSystem = false;
+	bool _viewDemo = false;
+
 private:
 	bool _wantResize = false;
-	sf::Vector2f _resizeTo = vl::Null<>();
+	sf::Vector2f _resizeTo = VecUtils::Null<>();
 	int _framesWithNoResizeRequest = 0;
 };
 

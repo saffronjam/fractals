@@ -12,7 +12,7 @@ Window::Window(const std::string &title, int width, int height)
 	: _videomode(width, height),
 	_style(sf::Style::Resize | sf::Style::Titlebar | sf::Style::Close),
 	_nativeWindow(sf::RenderWindow(_videomode, title, _style,
-								   sf::ContextSettings(0u, 0u, 0u, 1u, 4u, 0u, true)))
+								   sf::ContextSettings(0u, 0u, 0u, 1u, 4u, 0u)))
 
 {
 	const auto contexSettings = sf::ContextSettings();
@@ -21,10 +21,6 @@ Window::Window(const std::string &title, int width, int height)
 	_nativeWindow.resetGLStates();
 	SetTitle(title);
 	PositionCenter();
-}
-
-Window::~Window()
-{
 }
 
 void Window::Draw(const sf::Drawable &drawable, sf::RenderStates renderStates)

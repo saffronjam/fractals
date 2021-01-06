@@ -5,7 +5,7 @@
 namespace Se
 {
 FractalManager::FractalManager(const sf::Vector2f &renderSize) :
-	_lastViewport(vl::Null<>(), vl::Null<>())
+	_lastViewport(VecUtils::Null<>(), VecUtils::Null<>())
 {
 	_fractalSets.emplace_back(std::make_unique<Mandelbrot>(renderSize));
 	_fractalSets.emplace_back(std::make_unique<Julia>(renderSize));
@@ -80,7 +80,7 @@ void FractalManager::OnGuiRender()
 
 	Gui::BeginPropertyGrid();
 
-	if ( Gui::Property("Iterations", _computeIterations, 10, 500, 1, Gui::PropertyFlag::Slider) )
+	if ( Gui::Property("Iterations", _computeIterations, 10, 500, 1, Gui::PropertyFlag_Slider) )
 	{
 		SetComputeIterationCount(_computeIterations);
 	}
@@ -141,7 +141,7 @@ void FractalManager::SetFractalSet(FractalSet::Type type)
 	_fractalSets.at(static_cast<int>(_activeFractalSet))->MarkForImageComputation();
 	_fractalSets.at(static_cast<int>(_activeFractalSet))->MarkForImageRendering();
 	// Nullify the viewport cache to force a new viewport to be computed
-	_lastViewport = { vl::Null<>(), vl::Null<>() };
+	_lastViewport = { VecUtils::Null<>(), VecUtils::Null<>() };
 }
 
 void FractalManager::SetComputeIterationCount(size_t iterations)

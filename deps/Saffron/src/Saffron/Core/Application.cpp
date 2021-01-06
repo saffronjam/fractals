@@ -7,17 +7,20 @@
 #include "Saffron/Input/Keyboard.h"
 #include "Saffron/Input/Mouse.h"
 #include "Saffron/Gui/Gui.h"
+#include "Saffron/Gui/SplashScreenPane.h"
 #include "Saffron/Graphics/Scene.h"
 #include "Saffron/Graphics/RenderTargetManager.h"
 
-namespace Se {
+namespace Se
+{
 
 Application *Application::s_Instance = nullptr;
 
 
 Application::Application(const Properties &properties)
 	: _preLoader(CreateShared<BatchLoader>("Preloader")),
-	_window(properties.Name, properties.WindowWidth, properties.WindowHeight)
+	_window(properties.Name, properties.WindowWidth, properties.WindowHeight),
+	_fadeIn(FadePane::Type::In, sf::seconds(0.8f))
 {
 	SE_ASSERT(!s_Instance, "Application already exist");
 	s_Instance = this;
@@ -25,10 +28,11 @@ Application::Application(const Properties &properties)
 	SE_CORE_INFO("--- Saffron 2D Framework ---");
 	SE_CORE_INFO("Creating application {0}", properties.Name);
 
-	_window.SetEventCallback([this](const sf::Event &event) {OnEvent(event); });
+	_window.SetEventCallback([this](const sf::Event &event)
+							 { OnEvent(event); });
 
 	FileIOManager::Init(_window);
-    Gui::Init(Filepath("../../../imgui.ini"));
+	Gui::Init(Filepath("../../../imgui.ini"));
 
 	_preLoader->Submit([]
 					   {
@@ -74,35 +78,45 @@ void Application::EraseOverlay(std::shared_ptr<Layer> overlay)
 	_layerStack.EraseOverlay(overlay);
 }
 
-void Application::RenderGui()
-{
-	Gui::Begin();
-
-	for ( const auto &layer : _layerStack )
-	{
-		layer->OnGuiRender();
-	}
-
-	Gui::End();
-}
-
 void Application::Run()
 {
 	OnInit();
 
 	while ( _running )
 	{
+		if ( !_preLoader->IsFinished() )
+		{
+			RunSplashScreen();
+			_fadeIn.Start();
+		}
+
 		Global::Clock::Restart();
 		_window.HandleBufferedEvents();
 		_window.Clear();
 		RenderTargetManager::ClearAll();
 		if ( !_minimized )
 		{
+			Gui::Begin();
+			for ( const auto &layer : _layerStack )
+			{
+				layer->OnPreFrame();
+			}
 			for ( const auto &layer : _layerStack )
 			{
 				layer->OnUpdate();
 			}
-			RenderGui();
+			for ( const auto &layer : _layerStack )
+			{
+				layer->OnGuiRender();
+			}
+			for ( const auto &layer : _layerStack )
+			{
+				layer->OnPostFrame();
+			}
+			_fadeIn.OnUpdate();
+			_fadeIn.OnGuiRender();
+			Gui::End();
+
 			Keyboard::OnUpdate();
 			Mouse::OnUpdate();
 		}
@@ -177,6 +191,30 @@ bool Application::OnWindowClose()
 	return true;
 }
 
+void Application::RunSplashScreen()
+{
+	_preLoader->Execute();
+
+	SplashScreenPane splashScreenPane(_preLoader);
+	while ( !splashScreenPane.IsFinished() )
+	{
+		_window.Clear();
+		RenderTargetManager::ClearAll();
+		Gui::Begin();
+		splashScreenPane.OnUpdate();
+		splashScreenPane.OnGuiRender();
+		_window.HandleBufferedEvents();
+		Gui::End();
+		Run::Execute();
+		RenderTargetManager::DisplayAll();
+		_window.Display();
+		Global::Clock::Restart();
+		//const auto step = Global::Clock::GetFrameTime().asSeconds();
+		//const auto duration = splashScreenPane.GetBatchLoader()->IsFinished() ? 0ll : std::max(0ll, static_cast<long long>(1000.0 / 60.0 - step));
+		//std::this_thread::sleep_for(std::chrono::milliseconds(duration));
+	}
+}
+
 String Application::GetConfigurationName()
 {
 #if defined(SE_DEBUG)
@@ -195,7 +233,7 @@ String Application::GetPlatformName()
 #if defined(SE_PLATFORM_WINDOWS)
 	return "Windows x64";
 #elif defined(SE_PLATFORM_LINUX)
-    return "Linux x64";
+	return "Linux x64";
 #endif
 }
 }
