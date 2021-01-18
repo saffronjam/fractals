@@ -8,6 +8,7 @@
 
 #include "Saffron/Core/Application.h"
 #include "Saffron/Core/Global.h"
+#include "Saffron/Core/Voronoi.h"
 
 #include "Saffron/Graphics/ControllableRenderTexture.h"
 #include "Saffron/Graphics/RenderTargetManager.h"

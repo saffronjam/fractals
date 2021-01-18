@@ -66,6 +66,7 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
     file(GLOB INCLUDES_EXT
             ${LIBRARY_DIR}/entt/include
             ${LIBRARY_DIR}/imgui/include
+            ${LIBRARY_DIR}/jcv/include
             ${LIBRARY_DIR}/SFML/include
             ${LIBRARY_DIR}/spdlog/include
             PARENT_SCOPE
@@ -135,6 +136,7 @@ else ()
             ${SFML_INCLUDE_DIR}
             ${LIBRARY_DIR}/entt/include
             ${LIBRARY_DIR}/imgui/include
+            ${LIBRARY_DIR}/jcv/include
             ${LIBRARY_DIR}/spdlog/include
             )
     target_link_directories(Saffron PRIVATE

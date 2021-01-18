@@ -15,6 +15,11 @@
 #include <optional>
 #include <bitset>
 #include <initializer_list>
+#include <set>
+#include <unordered_set>
+#include <deque>
+#include <stack>
+#include <list>
 
 namespace Se
 {
@@ -40,12 +45,25 @@ typedef unsigned long long Uint64;
 
 template<typename T>
 using ArrayList = std::vector<T>;
+template <class _Ty, size_t _size>
+using Array = std::array<_Ty, _size>;
 template<typename Key, typename Value>
 using Map = std::map<Key, Value>;
 template<typename Key, typename Value>
 using MultiMap = std::multimap<Key, Value>;
 template<typename Key, typename Value>
 using UnorderedMap = std::unordered_map<Key, Value>;
+template <class T>
+using Set = std::set<T>;
+template<typename T>
+using UnorderedSet = std::unordered_set< T>;
+template<typename T>
+using Deque = std::deque<T>;
+template<typename T>
+using Stack = std::stack<T>;
+template<typename T>
+using List = std::list<T>;
+
 template<class FunctionType>
 using Function = std::function<FunctionType>;
 template<class... Types>
@@ -71,7 +89,7 @@ using Weak = std::weak_ptr<T>;
 
 using String = std::string;
 using WideString = std::wstring;
-using Filepath =  std::filesystem::path;
+using Filepath = std::filesystem::path;
 using DirectoryEntry = std::filesystem::directory_entry;
 using OutputStream = std::ofstream;
 using InputStream = std::ifstream;
@@ -84,13 +102,13 @@ using ConditionVariable = std::condition_variable;
 
 
 template<class MoveClass>
-constexpr auto &&Move(MoveClass &&moveClass) 
+constexpr auto &&Move(MoveClass &&moveClass)
 {
 	return static_cast<std::remove_reference_t<MoveClass> &&>(moveClass);
 }
 
 template<class FirstClass, class SecondClass>
-constexpr auto CreatePair(FirstClass &&first, SecondClass &second) 
+constexpr auto CreatePair(FirstClass &&first, SecondClass &&second)
 {
 	return std::make_pair(first, second);
 }

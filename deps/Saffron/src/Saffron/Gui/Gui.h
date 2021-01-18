@@ -1,6 +1,7 @@
 #pragma once
 
 #include <imgui.h>
+#include <imgui_internal.h>
 
 #include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Window/Event.hpp>
@@ -32,21 +33,17 @@ public:
 
 public:
 	static void Init(Filepath iniFilepath);
-
 	static void Shutdown();
 
 	static void OnEvent(const sf::Event &event);
 
 	static void Begin();
-
 	static void End();
 
 	static void BeginPropertyGrid(String id = "", float width = -1.0);
-
 	static void EndPropertyGrid();
 
 	static bool BeginTreeNode(const String &name, bool defaultOpen = true);
-
 	static void EndTreeNode();
 
 	////////////////////////////////
@@ -175,22 +172,17 @@ public:
 	static void InfoModal(const char *title, const char *text, bool &open);
 
 	static int GetFontSize();
-
 	static void SetStyle(Style style);
-
 	static void SetFontSize(int size);
-
 	static Font *AddFont(const Filepath &path, int size);
 
 	static void ForceHideBarTab();
 
 	static sf::Vector4f GetSaffronOrange(float opacity = 1.0f);
-
 	static sf::Vector4f GetSaffronPurple(float opacity = 1.0f);
 
 private:
 	static void PushID();
-
 	static void PopID();
 
 	static Font *GetAppropriateFont(int size);

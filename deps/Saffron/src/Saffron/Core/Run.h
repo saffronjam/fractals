@@ -20,6 +20,9 @@ public:
 private:
 	struct PeriodicFunction
 	{
+		void operator()() { function(); }
+		void operator()() const { function(); }
+
 		Function<void()> function;
 		sf::Time interval;
 		sf::Time currentCounter;
@@ -27,15 +30,17 @@ private:
 
 public:
 	static void Execute();
-	static void Later(const Function<void()> &function);
-	static Handle Periodically(const Function<void()> &function, sf::Time interval);
+
+	static void Later(Function<void()> function);
+	static Handle Periodically(Function<void()> function, sf::Time interval);
+	static Handle EveryFrame(Function<void()> function);
+
 	static void Remove(Handle handle);
 
 private:
 	static ArrayList<Function<void()>> _laterFunctions;
 	static Map<Handle, PeriodicFunction> _periodicFunctions;
-
+	static Map<Handle, Function<void()>> _frameFunctions;
 
 };
 }
-
