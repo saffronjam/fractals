@@ -7,6 +7,8 @@
 #include <SFML/Graphics/ConvexShape.hpp>
 #include <SFML/Graphics/Color.hpp>
 
+#include "Saffron/Core/Assert.h"
+#include "Saffron/Core/TypeDefs.h"
 #include "Saffron/Libraries/VecUtils.h"
 
 namespace Se
@@ -33,7 +35,7 @@ public:
 
 	static sf::Vector2f Mid(const sf::ConvexShape &polygon);
 
-	static sf::Vector2f Mid(const std::vector<sf::Vector2f> &polygonPoints);
+	static sf::Vector2f Mid(const ArrayList<sf::Vector2f> &polygonPoints);
 
 	template <typename T>
 	static sf::Vector2<T> MapPoint(const sf::Vector2<T> &point, sf::Rect<T> from, sf::Rect<T> to);
@@ -64,10 +66,10 @@ public:
 	template <typename T>
 	static sf::Color ValueToSpectrum(T value, T maxValue);
 
-	static sf::ConvexShape CreateConvexShape(const std::vector<sf::Vector2f> &points);
+	static sf::ConvexShape CreateConvexShape(const ArrayList<sf::Vector2f> &points);
 
 	template <typename T>
-	static std::vector<sf::Vector2<T>> WrapPoints(const std::vector<sf::Vector2<T>> &points);
+	static ArrayList<sf::Vector2<T>> WrapPoints(const ArrayList<sf::Vector2<T>> &points);
 
 	/// @hue: 0-360°
 	/// @saturation: 0.0 - 1.0
@@ -81,8 +83,8 @@ public:
 private:
 	template <typename T>
 	static void ClearPointsRecursively(const std::pair<sf::Vector2<T>, sf::Vector2<T>> &line,
-									   const std::vector<sf::Vector2<T>> &points,
-									   std::vector<sf::Vector2<T>> &finalPoints);
+									   const ArrayList<sf::Vector2<T>> &points,
+									   ArrayList<sf::Vector2<T>> &finalPoints);
 };
 
 template <typename T, typename U>
@@ -205,12 +207,12 @@ sf::Color GenUtils::ValueToSpectrum(T value, T maxValue)
 };
 
 template <typename T>
-std::vector<sf::Vector2<T>> GenUtils::WrapPoints(const std::vector<sf::Vector2<T>> &points)
+ArrayList<sf::Vector2<T>> GenUtils::WrapPoints(const ArrayList<sf::Vector2<T>> &points)
 {
-	std::vector<sf::Vector2f> finalPoints;
+	ArrayList<sf::Vector2f> finalPoints;
 
-	std::vector<sf::Vector2f> topPoints;
-	std::vector<sf::Vector2f> bottomPoints;
+	ArrayList<sf::Vector2f> topPoints;
+	ArrayList<sf::Vector2f> bottomPoints;
 	std::pair<sf::Vector2f, sf::Vector2f> startLine;
 
 	sf::Vector2f biggestX = {
@@ -253,8 +255,8 @@ std::vector<sf::Vector2<T>> GenUtils::WrapPoints(const std::vector<sf::Vector2<T
 
 template <typename T>
 void GenUtils::ClearPointsRecursively(const std::pair<sf::Vector2<T>, sf::Vector2<T>> &line,
-									  const std::vector<sf::Vector2<T>> &points,
-									  std::vector<sf::Vector2<T>> &finalPoints)
+									  const ArrayList<sf::Vector2<T>> &points,
+									  ArrayList<sf::Vector2<T>> &finalPoints)
 {
 	//Find the point which is the furthest away
 	float biggestDistance = 0.0f;
@@ -277,8 +279,8 @@ void GenUtils::ClearPointsRecursively(const std::pair<sf::Vector2<T>, sf::Vector
 		std::pair<sf::Vector2f, sf::Vector2f> newLine = { lineCpy.first, furthest };
 		lineCpy.first = furthest;
 
-		std::vector<sf::Vector2f> consideredPoints1;
-		std::vector<sf::Vector2f> consideredPoints2;
+		ArrayList<sf::Vector2f> consideredPoints1;
+		ArrayList<sf::Vector2f> consideredPoints2;
 		for ( auto &point : points )
 		{
 			if ( !VecUtils::IsLeft(newLine.first, newLine.second, point) )

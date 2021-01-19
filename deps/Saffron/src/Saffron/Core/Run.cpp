@@ -7,6 +7,7 @@ namespace Se
 {
 ArrayList<Function<void()>> Run::_laterFunctions;
 Map<Run::Handle, Run::PeriodicFunction> Run::_periodicFunctions;
+Map<Run::Handle, Function<void()>> Run::_frameFunctions;
 
 void Run::Execute()
 {
@@ -18,31 +19,44 @@ void Run::Execute()
 	}
 	_laterFunctions.clear();
 
-	for ( auto &[handle, periodcalFunction] : _periodicFunctions )
+	for ( auto &[handle, periodicFunction] : _periodicFunctions )
 	{
-		periodcalFunction.currentCounter += ts;
-		if ( periodcalFunction.currentCounter >= periodcalFunction.interval )
+		periodicFunction.currentCounter += ts;
+		if ( periodicFunction.currentCounter >= periodicFunction.interval )
 		{
-			periodcalFunction.currentCounter = sf::Time::Zero;
-			periodcalFunction.function();
+			periodicFunction.currentCounter = sf::Time::Zero;
+			periodicFunction();
 		}
+	}
+
+	for ( auto &[handle, frameFunction] : _frameFunctions )
+	{
+		frameFunction();
 	}
 }
 
-void Run::Later(const Function<void()> &function)
+void Run::Later(Function<void()> function)
 {
-	_laterFunctions.push_back(function);
+	_laterFunctions.push_back(Move(function));
 }
 
-Run::Handle Run::Periodically(const Function<void()> &function, sf::Time interval)
+Run::Handle Run::Periodically(Function<void()> function, sf::Time interval)
 {
 	Handle newHandle;
-	_periodicFunctions.emplace(newHandle, PeriodicFunction{ function, interval, sf::Time::Zero });
+	_periodicFunctions.emplace(newHandle, PeriodicFunction{ Move(function), interval, sf::Time::Zero });
+	return newHandle;
+}
+
+Run::Handle Run::EveryFrame(Function<void()> function)
+{
+	Handle newHandle;
+	_frameFunctions.emplace(newHandle, Move(function));
 	return newHandle;
 }
 
 void Run::Remove(Handle handle)
 {
 	_periodicFunctions.erase(handle);
+	_frameFunctions.erase(handle);
 }
 }

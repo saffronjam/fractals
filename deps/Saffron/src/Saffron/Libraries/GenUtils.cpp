@@ -14,17 +14,15 @@ sf::Vector2f GenUtils::Mid(const sf::ConvexShape &polygon)
 	return total / static_cast<float>(nPoints);
 }
 
-sf::Vector2f GenUtils::Mid(const std::vector<sf::Vector2f> &polygonPoints)
+sf::Vector2f GenUtils::Mid(const ArrayList<sf::Vector2f> &polygonPoints)
 {
-	const size_t nPoints = polygonPoints.size();
-	if ( nPoints > 0 )
+	SE_CORE_ASSERT(!polygonPoints.empty());
+	sf::Vector2f total(0.0f, 0.0f);
+	for ( const auto &point : polygonPoints )
 	{
-		sf::Vector2f total(0.0f, 0.0f);
-		for ( const auto &point : polygonPoints )
-			total += point;
-		return total / static_cast<float>(nPoints);
+		total += point;
 	}
-	return VecUtils::Null<>();
+	return total / static_cast<float>(polygonPoints.size());
 }
 
 void GenUtils::Rotate(sf::Transformable &transformable, const sf::Vector2f &direction)
@@ -39,9 +37,9 @@ void GenUtils::Rotate(sf::Transformable &transformable, const sf::Vector2f &dire
 	transformable.setRotation(angle);
 }
 
-sf::ConvexShape GenUtils::CreateConvexShape(const std::vector<sf::Vector2f> &points)
+sf::ConvexShape GenUtils::CreateConvexShape(const ArrayList<sf::Vector2f> &points)
 {
-	std::vector<sf::Vector2f> usablePoints = WrapPoints(points);
+	ArrayList<sf::Vector2f> usablePoints = WrapPoints(points);
 
 	sf::ConvexShape finalShape;
 	finalShape.setPointCount(usablePoints.size() / 2);

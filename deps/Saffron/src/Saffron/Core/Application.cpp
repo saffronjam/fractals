@@ -20,7 +20,7 @@ Application *Application::s_Instance = nullptr;
 Application::Application(const Properties &properties)
 	: _preLoader(CreateShared<BatchLoader>("Preloader")),
 	_window(properties.Name, properties.WindowWidth, properties.WindowHeight),
-	_fadeIn(FadePane::Type::In, sf::seconds(0.8f))
+	_fadeIn(FadePane::Type::In, sf::seconds(0.5f))
 {
 	SE_ASSERT(!s_Instance, "Application already exist");
 	s_Instance = this;
@@ -209,9 +209,9 @@ void Application::RunSplashScreen()
 		RenderTargetManager::DisplayAll();
 		_window.Display();
 		Global::Clock::Restart();
-		//const auto step = Global::Clock::GetFrameTime().asSeconds();
-		//const auto duration = splashScreenPane.GetBatchLoader()->IsFinished() ? 0ll : std::max(0ll, static_cast<long long>(1000.0 / 60.0 - step));
-		//std::this_thread::sleep_for(std::chrono::milliseconds(duration));
+		const auto step = Global::Clock::GetFrameTime().asSeconds();
+		const auto duration = splashScreenPane.GetBatchLoader()->IsFinished() ? 0ll : std::max(0ll, static_cast<long long>(1000.0 / 60.0 - step));
+		std::this_thread::sleep_for(std::chrono::milliseconds(duration));
 	}
 }
 
