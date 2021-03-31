@@ -4,7 +4,9 @@
 #define TO_STRING(Var) #Var
 #define SE_EXPAND_VARGS(x) x
 
+
 #ifdef SE_DEBUG
+
 #if defined(SE_PLATFORM_WINDOWS)
 #define SE_DEBUGBREAK() __debugbreak()
 #elif defined(SE_PLATFORM_LINUX)
@@ -13,4 +15,12 @@
 #else
 #error "Platform doesn't support debugbreak yet!"
 #endif
+
+// Macros only in debug
+#define SE_FN_DBG_ONLY(fn) {fn;}
+
+#else
+
+#define SE_FN_DBG_ONLY(fn)
+
 #endif

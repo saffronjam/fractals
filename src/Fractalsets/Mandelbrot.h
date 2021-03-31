@@ -21,11 +21,15 @@ public:
 
 	void OnRender(Scene &scene) override;
 
+	Shared<ComputeShader> GetComputeShader() override;
+
 	static sf::Vector2f TranslatePoint(const sf::Vector2f &point, int iterations);
 
 	void SetState(State state) noexcept { _state = state; }
 
 private:
+	Shared<ComputeShader> _computeCS;
+	
 	State _state;
 
 private:

@@ -65,6 +65,7 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
     ### EXTERNAL INCLUDES AND LIBRARIES ###
     file(GLOB INCLUDES_EXT
             ${LIBRARY_DIR}/entt/include
+            ${LIBRARY_DIR}/Glad/include
             ${LIBRARY_DIR}/imgui/include
             ${LIBRARY_DIR}/jcv/include
             ${LIBRARY_DIR}/SFML/include
@@ -108,6 +109,7 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
     target_link_directories(Saffron PUBLIC
             ${LIBRARY_DIR}/imgui/lib/${COMPILER_LIB_DIR}
             ${LIBRARY_DIR}/SFML/lib/${COMPILER_LIB_DIR}
+            ${LIBRARY_DIR}/Glad/lib
             )
     target_link_libraries(Saffron PUBLIC
             ## SFML
@@ -130,6 +132,10 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
 
             ## imgui
             imgui${LIB_SUFFIX}
+			
+			## Glad
+			Glad
+			
             )
 else ()
     target_include_directories(Saffron PRIVATE

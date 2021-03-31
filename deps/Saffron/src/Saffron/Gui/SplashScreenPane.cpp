@@ -9,7 +9,7 @@ namespace Se
 {
 SplashScreenPane::SplashScreenPane(const std::shared_ptr<BatchLoader> &batchLoader)
         : _batchLoader(batchLoader),
-          _texture(TextureStore::GetCopy("res/Editor/Saffron.png")),
+          _texture(TextureStore::Get("Editor/Saffron.png")),
           _finalizingStatus("Finalizing"),
           _fadeIn(FadePane::Type::In, sf::seconds(0.4f), sf::seconds(0.5f), true),
           _fadeOut(FadePane::Type::Out, sf::seconds(0.4f), [](sf::Time timer, sf::Time duration)
@@ -80,7 +80,7 @@ void SplashScreenPane::OnGuiRender()
     const auto logoWidth = 200;
     const auto logoHeight = 200;
     ImGui::SetCursorPos({windowSize.x / 2.0f - logoWidth / 2.0f, 2.0f * windowSize.y / 5.0f - logoHeight / 2.0f});
-    Gui::Image(_texture, {logoWidth, logoHeight}, sf::FloatRect{0.0f, 0.0f, 1.0f, 1.0f}, sf::Color(255, 255, 255, 255));
+    Gui::Image(*_texture, {logoWidth, logoHeight}, sf::FloatRect{0.0f, 0.0f, 1.0f, 1.0f}, sf::Color(255, 255, 255, 255));
 
     Gui::SetFontSize(36);
     ImGui::NewLine();

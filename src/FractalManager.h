@@ -21,6 +21,7 @@ public:
 private:
 	void SetFractalSet(FractalSet::Type type);
 	void SetComputeIterationCount(size_t iterations);
+	void SetComputeHost(FractalSet::ComputeHost computeHost);
 	void SetJuliaC(const std::complex<double> &c);
 	void SetJuliaCR(double r);
 	void SetJuliaCI(double i);
@@ -32,15 +33,17 @@ private:
 	ArrayList<std::unique_ptr<FractalSet>> _fractalSets;
 	FractalSet::Type _activeFractalSet;
 
-	Pair<sf::Vector2f, sf::Vector2f> _lastViewport;
+	FractalSet::SimBox _lastViewport;
 
 	sf::Vector2f _viewportMousePosition = VecUtils::Null<>();
 
 	//// Gui cache ////
 	ArrayList<const char *> _fractalSetComboBoxNames;
 	ArrayList<const char *> _paletteComboBoxNames;
+	ArrayList<const char *> _computeHostComboBoxNames;
 	int _activeFractalSetInt = static_cast<int>(FractalSet::Type::Mandelbrot);
 	int _activePaletteInt = static_cast<int>(FractalSet::Palette::Fiery);
+	int _computeHostInt = -1;
 	int _computeIterations = 64;
 
 	// Mandelbrot

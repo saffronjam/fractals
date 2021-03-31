@@ -2,7 +2,12 @@
 
 #define JC_VORONOI_IMPLEMENTATION
 
+#include <SFML/Graphics/RenderTarget.hpp>
+
 #include "Saffron/Core/Voronoi.h"
+#include "Saffron/Math/Random.h"
+#include "Saffron/Libraries/GenUtils.h"
+#include "Saffron/Libraries/VecUtils.h"
 
 namespace Se
 {
