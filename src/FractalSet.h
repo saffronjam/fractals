@@ -79,7 +79,7 @@ public:
 	ComputeHost GetComputeHost() const;
 	void SetComputeHost(ComputeHost computeHost);
 
-	void ResizeVertexArray(const sf::Vector2f& size);
+	void Resize(const sf::Vector2f& size);
 
 	void SetSimBox(const SimBox& box);
 	void SetComputeIterationCount(size_t iterations) noexcept;
@@ -87,6 +87,7 @@ public:
 
 protected:
 	virtual Shared<ComputeShader> GetComputeShader() = 0;
+	virtual void UpdateComputeShaderUniforms() = 0;
 
 private:
 	void UpdatePaletteTexture();
@@ -114,7 +115,7 @@ private:
 		float a;
 	};
 
-	ComputeHost _computeHost = ComputeHost::CPU;
+	ComputeHost _computeHost = ComputeHost::GPU;
 
 	Shared<ComputeShader> _painterCS;
 	sf::Texture _output;
@@ -123,7 +124,7 @@ private:
 
 	sf::VertexArray _vertexArray;
 	int* _fractalArray;
-	sf::Vector2f _vertexArrayDimensions;
+	sf::Vector2f _desiredSimulationDimensions;
 
 	// Marks with true if the image should be recomputed/reconstructed this frame
 	bool _recomputeImage;

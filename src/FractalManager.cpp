@@ -78,7 +78,7 @@ void FractalManager::OnGuiRender()
 	ImGui::PushItemWidth(-1);
 	if (ImGui::Combo("##Host", &_computeHostInt, _computeHostComboBoxNames.data(), _computeHostComboBoxNames.size()))
 	{
-		SetPalette(static_cast<FractalSet::Palette>(_computeHostInt));
+		SetComputeHost(static_cast<FractalSet::ComputeHost>(_computeHostInt));
 	}
 	ImGui::NextColumn();
 
@@ -139,7 +139,7 @@ void FractalManager::ResizeVertexArrays(const sf::Vector2f& size)
 {
 	for (const auto& set : _fractalSets)
 	{
-		set->ResizeVertexArray(size);
+		set->Resize(size);
 	}
 }
 

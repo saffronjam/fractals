@@ -24,16 +24,17 @@ public:
 
 	void OnUpdate(Scene &scene) override;
 
-	Shared<ComputeShader> GetComputeShader() override;
 	
 	const Complex<double>& GetC() const noexcept;
 
 	void SetState(State state) noexcept;
 	void SetC(const Complex<double> &c, bool animate = false);
 	void SetCR(double r, bool animate = false);
-
 	void SetCI(double i, bool animate = false);
 	
+private:
+	Shared<ComputeShader> GetComputeShader() override;
+	void UpdateComputeShaderUniforms() override;
 
 private:
 	Shared<ComputeShader> _computeCS;

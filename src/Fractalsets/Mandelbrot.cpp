@@ -54,6 +54,16 @@ Shared<ComputeShader> Mandelbrot::GetComputeShader()
 	return _computeCS;
 }
 
+void Mandelbrot::UpdateComputeShaderUniforms()
+{
+	const double xScale = (_simBox.BottomRight.x - _simBox.TopLeft.x) / static_cast<double>(_simWidth);
+	const double yScale = (_simBox.BottomRight.y - _simBox.TopLeft.y) / static_cast<double>(_simHeight);
+	_computeCS->SetVector2d("fractalTL", _simBox.TopLeft);
+	_computeCS->SetDouble("xScale", xScale);
+	_computeCS->SetDouble("yScale", yScale);
+	_computeCS->SetInt("iterations", _computeIterations);
+}
+
 void Mandelbrot::MandelbrotWorker::Compute()
 {
 	while (alive)

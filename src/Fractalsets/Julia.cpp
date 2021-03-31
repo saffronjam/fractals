@@ -75,10 +75,7 @@ void Julia::OnUpdate(Scene& scene)
 	FractalSet::OnUpdate(scene);
 }
 
-Shared<ComputeShader> Julia::GetComputeShader()
-{
-	return _computeCS;
-}
+
 
 const Complex<double>& Julia::GetC() const noexcept
 {
@@ -114,6 +111,22 @@ void Julia::SetC(const Complex<double>& c, bool animate)
 	}
 	_currentC = c;
 	_desiredC = c;
+}
+
+Shared<ComputeShader> Julia::GetComputeShader()
+{
+	return _computeCS;
+}
+
+void Julia::UpdateComputeShaderUniforms()
+{
+	const double xScale = (_simBox.BottomRight.x - _simBox.TopLeft.x) / static_cast<double>(_simWidth);
+	const double yScale = (_simBox.BottomRight.y - _simBox.TopLeft.y) / static_cast<double>(_simHeight);
+	_computeCS->SetVector2d("juliaC", _currentC);
+	_computeCS->SetVector2d("fractalTL", _simBox.TopLeft);
+	_computeCS->SetDouble("xScale", xScale);
+	_computeCS->SetDouble("yScale", yScale);
+	_computeCS->SetInt("iterations", _computeIterations);
 }
 
 void Julia::JuliaWorker::Compute()
