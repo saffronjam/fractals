@@ -22,7 +22,7 @@ private:
 	void SetFractalSet(FractalSet::Type type);
 	void SetComputeIterationCount(size_t iterations);
 	void SetComputeHost(FractalSet::ComputeHost computeHost);
-	void SetJuliaC(const std::complex<double> &c);
+	void SetJuliaC(const Complex<double> &c);
 	void SetJuliaCR(double r);
 	void SetJuliaCI(double i);
 	void SetPalette(FractalSet::Palette palette);
@@ -30,7 +30,7 @@ private:
 	void SetJuliaState(Julia::State state);
 
 private:
-	ArrayList<std::unique_ptr<FractalSet>> _fractalSets;
+	ArrayList<Unique<FractalSet>> _fractalSets;
 	FractalSet::Type _activeFractalSet;
 
 	FractalSet::SimBox _lastViewport;

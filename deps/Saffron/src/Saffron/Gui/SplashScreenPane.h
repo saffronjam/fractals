@@ -25,7 +25,7 @@ public:
 	bool IsHidden() const { return _hidden; }
 
 private:
-	String _title = "Slimes";
+	String _title = "Fractals";
 
 	std::shared_ptr<BatchLoader> _batchLoader;
 	Shared<sf::Texture> _texture;

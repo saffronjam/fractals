@@ -1,6 +1,6 @@
 #include "Mandelbrot.h"
 
-#include <complex>
+#include <glad/glad.h>
 
 #include <Saffron/Core/SIMD.h>
 
@@ -8,8 +8,9 @@ namespace Se
 {
 Mandelbrot::Mandelbrot(const sf::Vector2f& renderSize) :
 	FractalSet("Mandelbrot", Type::Mandelbrot, renderSize),
-	_state(State::None),
-	_computeCS(ComputeShaderStore::Get("mandelbrot.comp"))
+	_computeCS(ComputeShaderStore::Get("mandelbrot.comp")),
+	_pixelShader(ShaderStore::Get("mandelbrot.frag", sf::Shader::Fragment)),
+	_state(State::None)
 {
 	for (int i = 0; i < 32; i++)
 	{
@@ -62,6 +63,22 @@ void Mandelbrot::UpdateComputeShaderUniforms()
 	_computeCS->SetDouble("xScale", xScale);
 	_computeCS->SetDouble("yScale", yScale);
 	_computeCS->SetInt("iterations", _computeIterations);
+}
+
+Shared<sf::Shader> Mandelbrot::GetPixelShader()
+{
+	return _pixelShader;
+}
+
+void Mandelbrot::UpdatePixelShaderUniforms()
+{
+	const double xScale = (_simBox.BottomRight.x - _simBox.TopLeft.x) / static_cast<double>(_simWidth);
+	const double yScale = (_simBox.BottomRight.y - _simBox.TopLeft.y) / static_cast<double>(_simHeight);
+
+	SetUniform(_pixelShader->getNativeHandle(), "fractalTL", _simBox.TopLeft);
+	SetUniform(_pixelShader->getNativeHandle(), "xScale", xScale);
+	SetUniform(_pixelShader->getNativeHandle(), "yScale", yScale);
+	SetUniform(_pixelShader->getNativeHandle(), "iterations", static_cast<int>(_computeIterations));
 }
 
 void Mandelbrot::MandelbrotWorker::Compute()

@@ -1,21 +1,20 @@
 #version 430
 
-layout(local_size_x = 1, local_size_y = 1) in;
-layout(rgba32f, binding = 0) uniform image2D img_output;
-
 uniform dvec2 juliaC;
 uniform dvec2 fractalTL;
 uniform double xScale;
 uniform double yScale;
 uniform int iterations;
 
+out vec4 pixelColor;
+
 float map(float value, float min1, float max1, float min2, float max2) {
   return min2 + (value - min1) * (max2 - min2) / (max1 - min1);
 }
 
-void main() {
-
-	dvec2 id = gl_GlobalInvocationID.xy;
+void main()
+{
+    dvec2 id = gl_FragCoord.xy;
 
 	dvec2 scaledOffset = dvec2(id.x * xScale, id.y * yScale );
 	dvec2 fractalCoord = dvec2(fractalTL + scaledOffset);
@@ -31,5 +30,5 @@ void main() {
         z.y = 2.0 * zRealTmp * z.y + c.y;
 	}
 
-	imageStore(img_output, ivec2(id), vec4(n, 0.0, 0.0, 0.0) );
+	pixelColor = vec4(n, 0.0, 0.0, 1.0);
 }

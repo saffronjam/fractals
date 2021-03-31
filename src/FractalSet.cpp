@@ -1,6 +1,7 @@
 #include "FractalSet.h"
 
 #include <glad/glad.h>
+#include <SFML/Graphics/RectangleShape.hpp>
 
 namespace Se
 {
@@ -12,10 +13,10 @@ FractalSet::FractalSet(String name, Type type, sf::Vector2f renderSize) :
 	_simWidth(renderSize.x),
 	_simHeight(renderSize.y),
 	_simBox(VecUtils::Null<double>(), VecUtils::Null<double>()),
-	_painterCS(ComputeShaderStore::Get("painter.comp")),
+	_desiredSimulationDimensions(renderSize),
 	_vertexArray(sf::PrimitiveType::Points, _simWidth * _simHeight),
 	_fractalArray(new int[_simWidth * _simHeight]),
-	_desiredSimulationDimensions(renderSize),
+	_painterPS(ShaderStore::Get("painter.frag", sf::Shader::Type::Fragment)),
 	_recomputeImage(true),
 	_reconstructImage(true),
 	_shouldResize(false),
@@ -48,16 +49,20 @@ FractalSet::FractalSet(String name, Type type, sf::Vector2f renderSize) :
 		_vertexArray[i].color = sf::Color{0, 0, 0, 255};
 	}
 
-	_output.create(_simWidth, _simHeight);
-	_data.create(_simWidth, _simHeight);
-	_paletteTexture.create(PaletteWidth, 1);
+	_outputPS.create(_simWidth, _simHeight);
 
-	glBindTexture(GL_TEXTURE_2D, _output.getNativeHandle());
+	_outputCS.create(_simWidth, _simHeight);
+	glBindTexture(GL_TEXTURE_2D, _outputCS.getNativeHandle());
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, _simWidth, _simHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-	glBindTexture(GL_TEXTURE_2D, _data.getNativeHandle());
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, _simWidth, _simHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+
+	_shaderBasedHostTarget.create(_simWidth, _simHeight);
+	glBindTexture(GL_TEXTURE_2D, _shaderBasedHostTarget.getTexture().getNativeHandle());
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, _simWidth, _simHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+
+	_paletteTexture.create(PaletteWidth, 1);
 	glBindTexture(GL_TEXTURE_2D, _paletteTexture.getNativeHandle());
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, PaletteWidth, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
@@ -79,11 +84,6 @@ FractalSet::~FractalSet()
 void FractalSet::OnUpdate(Scene& scene)
 {
 	UpdatePaletteTexture();
-
-	glBindImageTexture(0, _output.getNativeHandle(), 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
-	glBindImageTexture(1, _data.getNativeHandle(), 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
-	glBindImageTexture(2, _paletteTexture.getNativeHandle(), 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
-
 
 	if (_colorTransitionTimer <= _colorTransitionDuration)
 	{
@@ -117,13 +117,19 @@ void FractalSet::OnUpdate(Scene& scene)
 
 void FractalSet::OnRender(Scene& scene)
 {
-	if (_computeHost == ComputeHost::CPU)
+	switch (_computeHost)
+	{
+	case ComputeHost::CPU:
 	{
 		scene.Submit(_vertexArray);
+		break;
 	}
-	else if (_computeHost == ComputeHost::GPU)
+	case ComputeHost::GPUComputeShader:
+	case ComputeHost::GPUPixelShader:
 	{
-		scene.Submit(sf::Sprite(_output));
+		scene.Submit(sf::Sprite(_shaderBasedHostTarget.getTexture()));
+		break;
+	}
 	}
 }
 
@@ -175,6 +181,11 @@ void FractalSet::Resize(const sf::Vector2f& size)
 	_shouldResize = true;
 }
 
+const sf::Texture& FractalSet::GetPaletteTexture() const
+{
+	return _paletteTexture;
+}
+
 void FractalSet::SetSimBox(const SimBox& box)
 {
 	_simBox = box;
@@ -190,6 +201,51 @@ void FractalSet::SetPalette(Palette palette) noexcept
 	_desiredPalette = palette;
 	_colorTransitionTimer = 0.0f;
 	_colorsStart = _colorsCurrent;
+}
+
+
+void FractalSet::SetUniform(Uint32 id, const String& name, const sf::Vector2<double>& value)
+{
+	glUseProgram(id);
+
+	const auto loc = glGetUniformLocation(id, name.c_str());
+	SE_CORE_ASSERT(loc != -1);
+	glUniform2d(loc, value.x, value.y);
+
+	glUseProgram(0);
+}
+
+void FractalSet::SetUniform(Uint32 id, const String& name, float value)
+{
+	glUseProgram(id);
+
+	const auto loc = glGetUniformLocation(id, name.c_str());
+	SE_CORE_ASSERT(loc != -1);
+	glUniform1f(loc, value);
+
+	glUseProgram(0);
+}
+
+void FractalSet::SetUniform(Uint32 id, const String& name, double value)
+{
+	glUseProgram(id);
+
+	const auto loc = glGetUniformLocation(id, name.c_str());
+	SE_CORE_ASSERT(loc != -1);
+	glUniform1d(loc, value);
+
+	glUseProgram(0);
+}
+
+void FractalSet::SetUniform(Uint32 id, const String& name, int value)
+{
+	glUseProgram(id);
+
+	const auto loc = glGetUniformLocation(id, name.c_str());
+	SE_CORE_ASSERT(loc != -1);
+	glUniform1i(loc, value);
+
+	glUseProgram(0);
 }
 
 void FractalSet::UpdatePaletteTexture()
@@ -210,7 +266,9 @@ void FractalSet::ComputeImage()
 			_simWidth = _desiredSimulationDimensions.x;
 			_simHeight = _desiredSimulationDimensions.y;
 
-			if (_computeHost == ComputeHost::CPU)
+			switch (_computeHost)
+			{
+			case ComputeHost::CPU:
 			{
 				_vertexArray.resize(_simWidth * _simHeight);
 				for (size_t i = 0; i < _vertexArray.getVertexCount(); i++)
@@ -227,26 +285,51 @@ void FractalSet::ComputeImage()
 					worker->fractalArray = _fractalArray;
 					worker->simWidth = _simWidth;
 				}
+				break;
 			}
-			else if (_computeHost == ComputeHost::GPU)
-			{
-				if (_simWidth != _output.getSize().x || _simHeight != _output.getSize().y)
-				{
-					_output.create(_simWidth, _simHeight);
-					_data.create(_simWidth, _simHeight);
 
-					glBindTexture(GL_TEXTURE_2D, _output.getNativeHandle());
+			case ComputeHost::GPUComputeShader:
+			{
+				if (_simWidth != _outputCS.getSize().x || _simHeight != _outputCS.getSize().y)
+				{
+					_outputCS.create(_simWidth, _simHeight);
+					_shaderBasedHostTarget.create(_simWidth, _simHeight);
+
+					glBindTexture(GL_TEXTURE_2D, _outputCS.getNativeHandle());
 					glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, _simWidth, _simHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE,
 					             nullptr);
-					glBindTexture(GL_TEXTURE_2D, _data.getNativeHandle());
-					glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, _simWidth, _simHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+
+					glBindTexture(GL_TEXTURE_2D, _shaderBasedHostTarget.getTexture().getNativeHandle());
+					glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, _simWidth, _simHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE,
 					             nullptr);
+
+					glBindTexture(GL_TEXTURE_2D, 0);
 				}
+				break;
 			}
+			case ComputeHost::GPUPixelShader:
+			{
+				if (_simWidth != _outputCS.getSize().x || _simHeight != _outputCS.getSize().y)
+				{
+					_outputPS.create(_simWidth, _simHeight);
+					_shaderBasedHostTarget.create(_simWidth, _simHeight);
+
+					glBindTexture(GL_TEXTURE_2D, _outputPS.getTexture().getNativeHandle());
+					glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, _simWidth, _simHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+						nullptr);
+					
+					glBindTexture(GL_TEXTURE_2D, 0);
+				}
+				break;
+			}
+			}
+
 			_shouldResize = false;
 		}
 
-		if (_computeHost == ComputeHost::CPU)
+		switch (_computeHost)
+		{
+		case ComputeHost::CPU:
 		{
 			const double imageSectionWidth = static_cast<double>(_simWidth) / static_cast<double>(_workers.size());
 			const double fractalSectionWidth = static_cast<double>(_simBox.BottomRight.x - _simBox.TopLeft.x) /
@@ -271,14 +354,28 @@ void FractalSet::ComputeImage()
 			while (_nWorkerComplete < _workers.size()) // Wait for all workers to complete
 			{
 			}
+			break;
 		}
-		else if (_computeHost == ComputeHost::GPU)
+		case ComputeHost::GPUComputeShader:
 		{
+			glBindImageTexture(0, _outputCS.getNativeHandle(), 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
 			UpdateComputeShaderUniforms();
 			auto fractalSetCS = GetComputeShader();
 			fractalSetCS->Dispatch(_simWidth, _simHeight, 1);
 
 			ComputeShader::AwaitFinish();
+			break;
+		}
+		case ComputeHost::GPUPixelShader:
+		{
+			UpdatePixelShaderUniforms();
+			const auto pixelShader = GetPixelShader();
+
+			sf::RectangleShape simRectShape(sf::Vector2f(_simWidth, _simHeight));
+			simRectShape.setTexture(&_paletteTexture);
+			_outputPS.draw(simRectShape, {pixelShader.get()});
+			break;
+		}
 		}
 		_recomputeImage = false;
 	}
@@ -288,7 +385,9 @@ void FractalSet::RenderImage()
 {
 	if (_reconstructImage)
 	{
-		if (_computeHost == ComputeHost::CPU)
+		switch (_computeHost)
+		{
+		case ComputeHost::CPU:
 		{
 			const auto* const colorPal = _currentPalette.getPixelsPtr();
 			for (int y = 0; y < _simHeight; y++)
@@ -304,14 +403,24 @@ void FractalSet::RenderImage()
 					       sizeof(sf::Uint8) * 3);
 				}
 			}
+			break;
 		}
-		else if (_computeHost == ComputeHost::GPU)
+		case ComputeHost::GPUComputeShader:
+		case ComputeHost::GPUPixelShader:
 		{
-			_painterCS->SetFloat("maxPixelValue", _computeIterations);
-			_painterCS->SetInt("paletteWidth", PaletteWidth);
-			_painterCS->Dispatch(_simWidth, _simHeight, 1);
+			const auto outputHandle = _computeHost == ComputeHost::GPUComputeShader
+				                          ? _outputCS.getNativeHandle()
+				                          : _outputPS.getTexture().getNativeHandle();
 
-			ComputeShader::AwaitFinish();
+			glBindImageTexture(0, outputHandle, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+			glBindImageTexture(1, _paletteTexture.getNativeHandle(), 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+			SetUniform(_painterPS->getNativeHandle(), "maxPixelValue", static_cast<float>(_computeIterations));
+			SetUniform(_painterPS->getNativeHandle(), "paletteWidth", PaletteWidth);
+			sf::RectangleShape simRectShape(sf::Vector2f(_simWidth, _simHeight));
+			simRectShape.setTexture(&_paletteTexture);
+			_shaderBasedHostTarget.draw(simRectShape, {_painterPS.get()});
+			break;
+		}
 		}
 		_reconstructImage = false;
 	}

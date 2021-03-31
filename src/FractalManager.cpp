@@ -7,7 +7,7 @@ namespace Se
 FractalManager::FractalManager(const sf::Vector2f& renderSize) :
 	_lastViewport(VecUtils::Null<double>(), VecUtils::Null<double>()),
 	_paletteComboBoxNames({"Fiery", "UV", "Greyscale", "Rainbow"}),
-	_computeHostComboBoxNames({"CPU", "GPU"})
+	_computeHostComboBoxNames({"CPU", "GPU Compute Shader", "GPU Pixel Shader"})
 {
 	_fractalSets.emplace_back(CreateUnique<Mandelbrot>(renderSize));
 	_fractalSets.emplace_back(CreateUnique<Julia>(renderSize));
@@ -63,14 +63,7 @@ void FractalManager::OnGuiRender()
 	{
 		SetFractalSet(static_cast<FractalSet::Type>(_activeFractalSetInt));
 	}
-	ImGui::NextColumn();
-	ImGui::Text("Palette");
-	ImGui::NextColumn();
-	ImGui::PushItemWidth(-1);
-	if (ImGui::Combo("##Palette", &_activePaletteInt, _paletteComboBoxNames.data(), _paletteComboBoxNames.size()))
-	{
-		SetPalette(static_cast<FractalSet::Palette>(_activePaletteInt));
-	}
+	
 	ImGui::NextColumn();
 
 	ImGui::Text("Host");
@@ -83,6 +76,21 @@ void FractalManager::OnGuiRender()
 	ImGui::NextColumn();
 
 	Gui::EndPropertyGrid();
+
+	ImGui::Separator();
+
+	Gui::BeginPropertyGrid("Palette");
+	ImGui::Text("Palette");
+	ImGui::NextColumn();
+	ImGui::PushItemWidth(-1);
+	if (ImGui::Combo("##Palette", &_activePaletteInt, _paletteComboBoxNames.data(), _paletteComboBoxNames.size()))
+	{
+		SetPalette(static_cast<FractalSet::Palette>(_activePaletteInt));
+	}
+	ImGui::NextColumn();
+	Gui::EndPropertyGrid();
+	ImGui::Dummy({1.0f, 2.0f});
+	Gui::Image(_fractalSets.at(static_cast<int>(_activeFractalSet))->GetPaletteTexture(), sf::Vector2f(ImGui::GetContentRegionAvailWidth(), 9.0f));
 
 	ImGui::Separator();
 

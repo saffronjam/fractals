@@ -30,8 +30,12 @@ private:
 	Shared<ComputeShader> GetComputeShader() override;
 	void UpdateComputeShaderUniforms() override;
 
+	Shared<sf::Shader> GetPixelShader() override;
+	void UpdatePixelShaderUniforms() override;
+
 private:
 	Shared<ComputeShader> _computeCS;
+	Shared<sf::Shader> _pixelShader;
 	
 	State _state;
 

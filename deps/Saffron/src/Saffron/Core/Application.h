@@ -21,7 +21,7 @@ public:
 	};
 
 public:
-	explicit Application(const Properties &properties = { "Saffron 2D", 1280, 720 });
+	explicit Application(const Properties &properties = { "Fractals", 1280, 720 });
 	virtual ~Application();
 
 	void Run();

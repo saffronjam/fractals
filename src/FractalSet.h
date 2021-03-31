@@ -32,7 +32,8 @@ public:
 	enum class ComputeHost
 	{
 		CPU,
-		GPU
+		GPUComputeShader,
+		GPUPixelShader
 	};
 
 	using Position = sf::Vector2<double>;
@@ -81,6 +82,7 @@ public:
 
 	void Resize(const sf::Vector2f& size);
 
+	const sf::Texture& GetPaletteTexture() const;
 	void SetSimBox(const SimBox& box);
 	void SetComputeIterationCount(size_t iterations) noexcept;
 	void SetPalette(Palette palette) noexcept;
@@ -88,6 +90,15 @@ public:
 protected:
 	virtual Shared<ComputeShader> GetComputeShader() = 0;
 	virtual void UpdateComputeShaderUniforms() = 0;
+
+	virtual Shared<sf::Shader> GetPixelShader() = 0;
+	virtual void UpdatePixelShaderUniforms() = 0;
+	
+	// Fix for problem with using OpenGL freely alongside SFML
+	static void SetUniform(Uint32 id, const String &name, const sf::Vector2<double> &value);
+	static void SetUniform(Uint32 id, const String &name, float value);
+	static void SetUniform(Uint32 id, const String &name, double value);
+	static void SetUniform(Uint32 id, const String &name, int value);
 
 private:
 	void UpdatePaletteTexture();
@@ -106,6 +117,8 @@ protected:
 	int _simHeight;
 	SimBox _simBox;
 
+	static constexpr int PaletteWidth = 256;
+
 private:
 	struct TransitionColor
 	{
@@ -115,17 +128,25 @@ private:
 		float a;
 	};
 
-	ComputeHost _computeHost = ComputeHost::GPU;
-
-	Shared<ComputeShader> _painterCS;
-	sf::Texture _output;
-	sf::Texture _data;
-	sf::Texture _paletteTexture;
-
+	ComputeHost _computeHost = ComputeHost::GPUPixelShader;
+	sf::Vector2f _desiredSimulationDimensions;
+	
+	// CPU Host
 	sf::VertexArray _vertexArray;
 	int* _fractalArray;
-	sf::Vector2f _desiredSimulationDimensions;
+	
+	// GPU Compute Shader Host
+	sf::Texture _outputCS;
 
+	// GPU Pixel Shader Host
+	sf::RenderTexture _outputPS;
+	
+	// Shader Host common
+	Shared<sf::Shader> _painterPS;
+	sf::RenderTexture _shaderBasedHostTarget;
+	sf::Texture _testTex;
+	sf::Texture _paletteTexture;
+	
 	// Marks with true if the image should be recomputed/reconstructed this frame
 	bool _recomputeImage;
 	bool _reconstructImage;
@@ -140,8 +161,6 @@ private:
 	float _colorTransitionDuration;
 	ArrayList<Shared<sf::Image>> _palettes;
 
-	static constexpr int PaletteWidth = 256;
-
 protected:
 	struct Worker
 	{
@@ -153,10 +172,10 @@ protected:
 		int* fractalArray;
 		int simWidth = 0;
 
-		sf::Vector2<double> imageTL = {0.0f, 0.0f};
-		sf::Vector2<double> imageBR = {0.0f, 0.0f};
-		sf::Vector2<double> fractalTL = {0.0f, 0.0f};
-		sf::Vector2<double> fractalBR = {0.0f, 0.0f};
+		Position imageTL = {0.0, 0.0};
+		Position imageBR = {0.0, 0.0};
+		Position fractalTL = {0.0, 0.0};
+		Position fractalBR = {0.0, 0.0};
 
 		size_t iterations = 0;
 		bool alive = true;

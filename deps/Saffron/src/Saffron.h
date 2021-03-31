@@ -32,6 +32,7 @@
 #include "Saffron/Resource/ComputeShaderStore.h"
 #include "Saffron/Resource/ImageStore.h"
 #include "Saffron/Resource/MusicStore.h"
+#include "Saffron/Resource/ShaderStore.h"
 #include "Saffron/Resource/SoundBufferStore.h"
 #include "Saffron/Resource/TextureStore.h"
 

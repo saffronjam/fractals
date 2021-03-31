@@ -6,14 +6,15 @@ namespace Se
 {
 Julia::Julia(const sf::Vector2f& renderSize) :
 	FractalSet("Julia", Type::Julia, renderSize),
+	_computeCS(ComputeShaderStore::Get("julia.comp")),
+	_pixelShader(ShaderStore::Get("julia.frag", sf::Shader::Fragment)),
 	_state(State::None),
 	_desiredC(0.0, 0.0),
 	_currentC(0.0, 0.0),
 	_startC(0.0, 0.0),
 	_animationTimer(0.0f),
 	_cTransitionTimer(0.0f),
-	_cTransitionDuration(0.5f),
-	_computeCS(ComputeShaderStore::Get("julia.comp"))
+	_cTransitionDuration(0.5f)
 {
 	for (int i = 0; i < 32; i++)
 	{
@@ -76,7 +77,6 @@ void Julia::OnUpdate(Scene& scene)
 }
 
 
-
 const Complex<double>& Julia::GetC() const noexcept
 {
 	return _desiredC;
@@ -99,7 +99,7 @@ void Julia::SetCI(double i, bool animate)
 
 void Julia::SetC(const Complex<double>& c, bool animate)
 {
-	if (animate && abs(c - _desiredC) > 0.1f)
+	if (animate && abs(c - _desiredC) > 0.1)
 	{
 		_startC = _currentC;
 		_cTransitionTimer = 0.0f;
@@ -127,6 +127,23 @@ void Julia::UpdateComputeShaderUniforms()
 	_computeCS->SetDouble("xScale", xScale);
 	_computeCS->SetDouble("yScale", yScale);
 	_computeCS->SetInt("iterations", _computeIterations);
+}
+
+Shared<sf::Shader> Julia::GetPixelShader()
+{
+	return _pixelShader;
+}
+
+void Julia::UpdatePixelShaderUniforms()
+{
+	const double xScale = (_simBox.BottomRight.x - _simBox.TopLeft.x) / static_cast<double>(_simWidth);
+	const double yScale = (_simBox.BottomRight.y - _simBox.TopLeft.y) / static_cast<double>(_simHeight);
+
+	SetUniform(_pixelShader->getNativeHandle(), "juliaC", sf::Vector2<double>(_currentC.real(), _currentC.imag()));
+	SetUniform(_pixelShader->getNativeHandle(), "fractalTL", _simBox.TopLeft);
+	SetUniform(_pixelShader->getNativeHandle(), "xScale", xScale);
+	SetUniform(_pixelShader->getNativeHandle(), "yScale", yScale);
+	SetUniform(_pixelShader->getNativeHandle(), "iterations", static_cast<int>(_computeIterations));
 }
 
 void Julia::JuliaWorker::Compute()
