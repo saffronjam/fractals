@@ -23,7 +23,8 @@ FractalSet::FractalSet(String name, Type type, sf::Vector2f renderSize) :
 	_desiredPalette(Fiery),
 	_colorTransitionTimer(0.0f),
 	_colorTransitionDuration(0.7f),
-	_palettes(4)
+	_palettes(4),
+	_axisVA(sf::PrimitiveType::Lines)
 {
 	_palettes[Fiery] = ImageStore::Get("Pals/fiery.png");
 	_palettes[UV] = ImageStore::Get("Pals/uv.png");
@@ -64,6 +65,40 @@ FractalSet::FractalSet(String name, Type type, sf::Vector2f renderSize) :
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, PaletteWidth, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 
 	glBindTexture(GL_TEXTURE_2D, 0);
+
+
+	_axisVA.append(sf::Vertex(sf::Vector2f(-3.0f, 0.0f), sf::Color::White));
+	_axisVA.append(sf::Vertex(sf::Vector2f(3.0f, 0.0f), sf::Color::White));
+	_axisVA.append(sf::Vertex(sf::Vector2f(0.0f, -3.0f), sf::Color::White));
+	_axisVA.append(sf::Vertex(sf::Vector2f(0.0f, 3.0f), sf::Color::White));
+
+	constexpr float lineOffset1 = 0.1f;
+	constexpr float lineOffset10 = 0.01f;
+	constexpr float lineOffset100 = 0.001f;
+	constexpr float lineOffset1000 = 0.0001f;
+
+	const int range = 3000;
+	for (int i = -range; i <= range; i++)
+	{
+		float offset = lineOffset1000;
+		if(i % 1000 == 0)
+		{
+			offset = lineOffset1;
+		}
+		else if (i % 100 == 0)
+		{
+			offset = lineOffset10;
+		}
+		else if (i % 10 == 0)
+		{
+			offset = lineOffset100;
+		}
+		
+		_axisVA.append(sf::Vertex(sf::Vector2f(static_cast<float>(i) / 1000.0f, -offset), sf::Color::White));
+		_axisVA.append(sf::Vertex(sf::Vector2f(static_cast<float>(i) / 1000.0f, offset), sf::Color::White));
+		_axisVA.append(sf::Vertex(sf::Vector2f(-offset, static_cast<float>(i) / 1000.0f), sf::Color::White));
+		_axisVA.append(sf::Vertex(sf::Vector2f(offset, static_cast<float>(i) / 1000.0f), sf::Color::White));
+	}
 }
 
 FractalSet::~FractalSet()
@@ -117,6 +152,7 @@ void FractalSet::OnUpdate(Scene& scene)
 
 void FractalSet::OnRender(Scene& scene)
 {
+	scene.ActivateScreenSpaceDrawing();
 	switch (_computeHost)
 	{
 	case ComputeHost::CPU:
@@ -130,6 +166,12 @@ void FractalSet::OnRender(Scene& scene)
 		scene.Submit(sf::Sprite(_shaderBasedHostTarget.getTexture()));
 		break;
 	}
+	}
+	scene.DeactivateScreenSpaceDrawing();
+
+	if (_drawAxis)
+	{
+		scene.Submit(_axisVA);
 	}
 }
 
@@ -203,6 +245,15 @@ void FractalSet::SetPalette(Palette palette) noexcept
 	_colorsStart = _colorsCurrent;
 }
 
+void FractalSet::ActivateAxis()
+{
+	_drawAxis = true;
+}
+
+void FractalSet::DeactivateAxis()
+{
+	_drawAxis = false;
+}
 
 void FractalSet::SetUniform(Uint32 id, const String& name, const sf::Vector2<double>& value)
 {
@@ -316,8 +367,8 @@ void FractalSet::ComputeImage()
 
 					glBindTexture(GL_TEXTURE_2D, _outputPS.getTexture().getNativeHandle());
 					glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, _simWidth, _simHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-						nullptr);
-					
+					             nullptr);
+
 					glBindTexture(GL_TEXTURE_2D, 0);
 				}
 				break;

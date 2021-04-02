@@ -87,6 +87,9 @@ public:
 	void SetComputeIterationCount(size_t iterations) noexcept;
 	void SetPalette(Palette palette) noexcept;
 
+	void ActivateAxis();
+	void DeactivateAxis();
+
 protected:
 	virtual Shared<ComputeShader> GetComputeShader() = 0;
 	virtual void UpdateComputeShaderUniforms() = 0;
@@ -160,6 +163,10 @@ private:
 	float _colorTransitionTimer;
 	float _colorTransitionDuration;
 	ArrayList<Shared<sf::Image>> _palettes;
+
+	// Axis
+	bool _drawAxis = false;
+	sf::VertexArray _axisVA;
 
 protected:
 	struct Worker

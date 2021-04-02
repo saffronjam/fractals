@@ -28,6 +28,7 @@ private:
 	void SetPalette(FractalSet::Palette palette);
 	void SetMandelbrotState(Mandelbrot::State state);
 	void SetJuliaState(Julia::State state);
+	void SetAxisState(bool state);
 
 private:
 	ArrayList<Unique<FractalSet>> _fractalSets;
@@ -52,5 +53,8 @@ private:
 	// Julia
 	int _juliaStateInt = static_cast<int>(Julia::State::None);
 	sf::Vector2f _juliaC = VecUtils::Null<>();
+
+	// Shared
+	bool _axis = false;
 };
 }

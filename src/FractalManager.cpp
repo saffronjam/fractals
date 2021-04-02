@@ -44,11 +44,7 @@ void FractalManager::OnRender(Scene& scene)
 {
 	if (scene.GetViewportPane().GetViewportSize().x < 200 || scene.GetViewportPane().GetViewportSize().y < 200) return;
 
-	scene.ActivateScreenSpaceDrawing();
 	_fractalSets.at(static_cast<int>(_activeFractalSet))->OnRender(scene);
-	scene.DeactivateScreenSpaceDrawing();
-
-
 	_viewportMousePosition = scene.GetViewportPane().GetMousePosition();
 }
 
@@ -63,7 +59,7 @@ void FractalManager::OnGuiRender()
 	{
 		SetFractalSet(static_cast<FractalSet::Type>(_activeFractalSetInt));
 	}
-	
+
 	ImGui::NextColumn();
 
 	ImGui::Text("Host");
@@ -90,13 +86,19 @@ void FractalManager::OnGuiRender()
 	ImGui::NextColumn();
 	Gui::EndPropertyGrid();
 	ImGui::Dummy({1.0f, 2.0f});
-	Gui::Image(_fractalSets.at(static_cast<int>(_activeFractalSet))->GetPaletteTexture(), sf::Vector2f(ImGui::GetContentRegionAvailWidth(), 9.0f));
+	Gui::Image(_fractalSets.at(static_cast<int>(_activeFractalSet))->GetPaletteTexture(),
+	           sf::Vector2f(ImGui::GetContentRegionAvailWidth(), 9.0f));
 
 	ImGui::Separator();
 
 	Gui::BeginPropertyGrid();
 
-	if (Gui::Property("Iterations", _computeIterations, 10, 500, 1, Gui::PropertyFlag_Slider))
+	if (Gui::Property("Axis", _axis))
+	{
+		SetAxisState(_axis);
+	}
+
+	if (Gui::Property("Iterations", _computeIterations, 10, 800, 1, Gui::PropertyFlag_Slider))
 	{
 		SetComputeIterationCount(_computeIterations);
 	}
@@ -220,5 +222,20 @@ void FractalManager::SetJuliaState(Julia::State state)
 {
 	auto& juliaSet = dynamic_cast<Julia&>(*_fractalSets[static_cast<int>(FractalSet::Type::Julia)]);
 	juliaSet.SetState(state);
+}
+
+void FractalManager::SetAxisState(bool state)
+{
+	for (auto& fractalSet : _fractalSets)
+	{
+		if (_axis)
+		{
+			fractalSet->ActivateAxis();
+		}
+		else
+		{
+			fractalSet->DeactivateAxis();
+		}
+	}
 }
 }

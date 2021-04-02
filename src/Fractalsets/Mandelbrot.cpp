@@ -36,7 +36,6 @@ void Mandelbrot::OnRender(Scene& scene)
 	FractalSet::OnRender(scene);
 	if (_state == State::ComplexLines)
 	{
-		scene.DeactivateScreenSpaceDrawing();
 		const sf::Vector2f start = scene.GetCamera().ScreenToWorld(scene.GetViewportPane().GetMousePosition());
 		sf::Vector2f to = start;
 		for (int i = 1; i < _computeIterations; i++)
@@ -46,7 +45,6 @@ void Mandelbrot::OnRender(Scene& scene)
 			to = from;
 			scene.Submit(to, sf::Color(255, 255, 255, 150), 5.0f);
 		}
-		scene.ActivateScreenSpaceDrawing();
 	}
 }
 
