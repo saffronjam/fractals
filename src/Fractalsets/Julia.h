@@ -24,19 +24,30 @@ public:
 
 	void OnUpdate(Scene &scene) override;
 
-	const std::complex<double> &GetC() const noexcept { return _desiredC; }
+	
+	const Complex<double>& GetC() const noexcept;
 
-	void SetState(State state) noexcept { _state = state; }
-	void SetC(const std::complex<double> &c, bool animate = false);
-	void SetCR(double r, bool animate = false) { SetC(std::complex(r, GetC().imag()), animate); }
-	void SetCI(double i, bool animate = false) { SetC(std::complex(GetC().real(), i), animate); }
+	void SetState(State state) noexcept;
+	void SetC(const Complex<double> &c, bool animate = false);
+	void SetCR(double r, bool animate = false);
+	void SetCI(double i, bool animate = false);
+	
+private:
+	Shared<ComputeShader> GetComputeShader() override;
+	void UpdateComputeShaderUniforms() override;
+
+	Shared<sf::Shader> GetPixelShader() override;
+	void UpdatePixelShaderUniforms() override;
 
 private:
+	Shared<ComputeShader> _computeCS;
+	Shared<sf::Shader> _pixelShader;
+	
 	State _state;
 
-	std::complex<double> _desiredC;
-	std::complex<double> _currentC;
-	std::complex<double> _startC;
+	Complex<double> _desiredC;
+	Complex<double> _currentC;
+	Complex<double> _startC;
 
 	float _animationTimer;
 
@@ -49,7 +60,7 @@ private:
 		~JuliaWorker() override = default;
 		void Compute() override;
 
-		std::complex<double> c;
+		Complex<double> c;
 	};
 };
 }

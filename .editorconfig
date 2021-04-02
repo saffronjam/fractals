@@ -1,0 +1,20 @@
+
+[*]
+
+# ReSharper properties
+resharper_blank_lines_around_single_line_function_definition = 1
+resharper_cpp_brace_style = next_line
+resharper_cpp_empty_block_style = multiline
+resharper_cpp_keep_user_linebreaks = false
+resharper_cpp_wrap_lines = true
+resharper_empty_block_style = together_same_line
+resharper_function_declaration_return_type_style = on_single_line
+resharper_function_definition_return_type_style = on_single_line
+resharper_line_break_after_colon_in_member_initializer_lists = line_break
+resharper_line_break_after_comma_in_member_initializer_lists = true
+resharper_member_initializer_list_style = on_single_line
+resharper_namespace_indentation = none
+resharper_simple_block_style = do_not_change
+resharper_toplevel_function_declaration_return_type_style = on_single_line
+resharper_toplevel_function_definition_return_type_style = on_single_line
+resharper_wrap_lines = true

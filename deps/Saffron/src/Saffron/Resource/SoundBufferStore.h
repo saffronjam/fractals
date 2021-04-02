@@ -1,46 +1,43 @@
 #pragma once
 
 #include <SFML/Audio/SoundBuffer.hpp>
-#include <SFML/Audio/Sound.hpp>
 
-#include "Saffron/Interface/IResourceStore.h"
+#include "Saffron/Resource/ResourceStore.h"
 
 namespace Se
 {
-class SoundBufferStore : public IResourceStore<sf::SoundBuffer>
+class SoundBufferStore : public ResourceStore<sf::SoundBuffer>
 {
 public:
-	SoundBufferStore() = default;
-	SoundBufferStore(const SoundBufferStore &) = delete;
-	const SoundBufferStore &operator()(const SoundBufferStore &) = delete;
+	static Shared<sf::SoundBuffer> Get(const Filepath& filepath, bool copy)
+	{
+		return Instance()._Get(filepath, copy);
+	}
 
-	// Returns pointer resource from cache, if not existing, call Load();
-	static sf::SoundBuffer *Get(const std::string &filepath)
+private:
+	Shared<sf::SoundBuffer> Copy(const Shared<sf::SoundBuffer>& value) override
 	{
-		if ( _resources.find(filepath) == _resources.end() )
-		{
-			Load(filepath);
-		}
-		return &_resources[filepath];
+		return CreateShared<sf::SoundBuffer>(*value);
 	}
-	// Returns copy of resource from cache, if not existing, call Load();
-	static const sf::SoundBuffer &GetCopy(const std::string &filepath)
+
+	Filepath GetLocation() override
 	{
-		if ( _resources.find(filepath) == _resources.end() )
-		{
-			Load(filepath);
-		}
-		return _resources[filepath];
+		return "res/Sounds/";
 	}
-	// Load resource into memory
-	static void Load(const std::string &filepath)
+
+	static SoundBufferStore& Instance()
 	{
-		sf::SoundBuffer resource;
-		if ( !resource.loadFromFile(filepath) )
-		{
-			{ char buf[200]; sprintf(buf, "Failed to load soundbuffer: %s", filepath.c_str()); throw Exception(__LINE__, __FILE__, buf); };
-		}
-		_resources.emplace(std::make_pair(filepath, resource));
+		static SoundBufferStore resourceStore;
+		return resourceStore;
+	}
+
+private:
+	Shared<sf::SoundBuffer> Load(Filepath filepath) override
+	{
+		auto resource = CreateShared<sf::SoundBuffer>();
+		const auto result = resource->loadFromFile(filepath.string());
+		SE_CORE_ASSERT(result, "Failed to load SoundBuffer");
+		return resource;
 	}
 };
 }

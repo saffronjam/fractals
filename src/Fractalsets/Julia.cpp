@@ -4,8 +4,10 @@
 
 namespace Se
 {
-Julia::Julia(const sf::Vector2f &renderSize)
-	: FractalSet("Julia", Type::Julia, renderSize),
+Julia::Julia(const sf::Vector2f& renderSize) :
+	FractalSet("Julia", Type::Julia, renderSize),
+	_computeCS(ComputeShaderStore::Get("julia.comp")),
+	_pixelShader(ShaderStore::Get("julia.frag", sf::Shader::Fragment)),
 	_state(State::None),
 	_desiredC(0.0, 0.0),
 	_currentC(0.0, 0.0),
@@ -14,23 +16,23 @@ Julia::Julia(const sf::Vector2f &renderSize)
 	_cTransitionTimer(0.0f),
 	_cTransitionDuration(0.5f)
 {
-	for ( int i = 0; i < 32; i++ )
+	for (int i = 0; i < 32; i++)
 	{
 		AddWorker(new JuliaWorker);
 	}
 }
 
-void Julia::OnUpdate(Scene &scene)
+void Julia::OnUpdate(Scene& scene)
 {
-	switch ( _state )
+	switch (_state)
 	{
 	case State::Animate:
 	{
 		const double x = 0.7885 * std::cos(_animationTimer);
 		const double y = 0.7885 * std::sin(_animationTimer);
-		SetC(std::complex<double>(x, y), false);
+		SetC(Complex<double>(x, y), false);
 		_animationTimer += Global::Clock::GetFrameTime().asSeconds() / 2.0f;
-		if ( _animationTimer > 2.0f * PI<> )
+		if (_animationTimer > 2.0f * PI<>)
 		{
 			_animationTimer = 0.0f;
 		}
@@ -38,46 +40,66 @@ void Julia::OnUpdate(Scene &scene)
 	}
 	case State::FollowCursor:
 	{
-		if ( scene.GetViewportPane().IsHovered() && !Keyboard::IsDown(sf::Keyboard::Key::LControl) )
+		if (scene.GetViewportPane().IsHovered() && !Keyboard::IsDown(sf::Keyboard::Key::LControl))
 		{
 			const auto mousePos = scene.GetCamera().ScreenToWorld(scene.GetViewportPane().GetMousePosition());
-			SetC(std::complex<double>(mousePos.x, mousePos.y), false);
+			SetC(Complex<double>(mousePos.x, mousePos.y), false);
 		}
 		break;
 	}
-	default:
-		break;
+	default: break;
 	}
 
-	if ( _currentC != _desiredC )
+	if (_currentC != _desiredC)
 	{
 		MarkForImageComputation();
 		MarkForImageRendering();
 	}
-	if ( _cTransitionTimer <= _cTransitionDuration && _state == State::None )
+	if (_cTransitionTimer <= _cTransitionDuration && _state == State::None)
 	{
-		const float delta = (std::sin((_cTransitionTimer / _cTransitionDuration) * PI<> -PI<> / 2.0f) + 1.0f) / 2.0f;
+		const float delta = (std::sin((_cTransitionTimer / _cTransitionDuration) * PI<> - PI<> / 2.0f) + 1.0f) / 2.0f;
 		_currentC.real(_startC.real() + static_cast<double>(delta) * (_desiredC.real() - _startC.real()));
 		_currentC.imag(_startC.imag() + static_cast<double>(delta) * (_desiredC.imag() - _startC.imag()));
 		_cTransitionTimer += Global::Clock::GetFrameTime().asSeconds();
 	}
-	else if ( _state != State::None )
+	else if (_state != State::None)
 	{
 		_currentC = _desiredC;
 	}
 
-	for ( auto &worker : _workers )
+	for (auto& worker : _workers)
 	{
-		auto *juliaWorker = dynamic_cast<JuliaWorker *>(worker);
+		auto* juliaWorker = dynamic_cast<JuliaWorker*>(worker);
 		juliaWorker->c = _currentC;
 	}
 
 	FractalSet::OnUpdate(scene);
 }
 
-void Julia::SetC(const std::complex<double> &c, bool animate)
+
+const Complex<double>& Julia::GetC() const noexcept
 {
-	if ( animate && abs(c - _desiredC) > 0.1f )
+	return _desiredC;
+}
+
+void Julia::SetState(State state) noexcept
+{
+	_state = state;
+}
+
+void Julia::SetCR(double r, bool animate)
+{
+	SetC(Complex<double>(r, GetC().imag()), animate);
+}
+
+void Julia::SetCI(double i, bool animate)
+{
+	SetC(Complex<double>(GetC().real(), i), animate);
+}
+
+void Julia::SetC(const Complex<double>& c, bool animate)
+{
+	if (animate && abs(c - _desiredC) > 0.1)
 	{
 		_startC = _currentC;
 		_cTransitionTimer = 0.0f;
@@ -91,13 +113,46 @@ void Julia::SetC(const std::complex<double> &c, bool animate)
 	_desiredC = c;
 }
 
+Shared<ComputeShader> Julia::GetComputeShader()
+{
+	return _computeCS;
+}
+
+void Julia::UpdateComputeShaderUniforms()
+{
+	const double xScale = (_simBox.BottomRight.x - _simBox.TopLeft.x) / static_cast<double>(_simWidth);
+	const double yScale = (_simBox.BottomRight.y - _simBox.TopLeft.y) / static_cast<double>(_simHeight);
+	_computeCS->SetVector2d("juliaC", _currentC);
+	_computeCS->SetVector2d("fractalTL", _simBox.TopLeft);
+	_computeCS->SetDouble("xScale", xScale);
+	_computeCS->SetDouble("yScale", yScale);
+	_computeCS->SetInt("iterations", _computeIterations);
+}
+
+Shared<sf::Shader> Julia::GetPixelShader()
+{
+	return _pixelShader;
+}
+
+void Julia::UpdatePixelShaderUniforms()
+{
+	const double xScale = (_simBox.BottomRight.x - _simBox.TopLeft.x) / static_cast<double>(_simWidth);
+	const double yScale = (_simBox.BottomRight.y - _simBox.TopLeft.y) / static_cast<double>(_simHeight);
+
+	SetUniform(_pixelShader->getNativeHandle(), "juliaC", sf::Vector2<double>(_currentC.real(), _currentC.imag()));
+	SetUniform(_pixelShader->getNativeHandle(), "fractalTL", _simBox.TopLeft);
+	SetUniform(_pixelShader->getNativeHandle(), "xScale", xScale);
+	SetUniform(_pixelShader->getNativeHandle(), "yScale", yScale);
+	SetUniform(_pixelShader->getNativeHandle(), "iterations", static_cast<int>(_computeIterations));
+}
+
 void Julia::JuliaWorker::Compute()
 {
-	while ( alive )
+	while (alive)
 	{
-		std::unique_lock<std::mutex> lm(mutex);
+		std::unique_lock<Mutex> lm(mutex);
 		cvStart.wait(lm);
-		if ( !alive )
+		if (!alive)
 		{
 			nWorkerComplete++;
 			return;
@@ -131,20 +186,19 @@ void Julia::JuliaWorker::Compute()
 		_cr = SIMD_SetOne(c.real());
 		_ci = SIMD_SetOne(-c.imag()); // The negative sign is intentional
 
-		for ( y = imageTL.y; y < imageBR.y; y++ )
+		for (y = imageTL.y; y < imageBR.y; y++)
 		{
 			// Reset x_position
 			_a = SIMD_SetOne(fractalTL.x);
 			_x_pos = SIMD_Add(_a, _x_pos_offsets);
 
-			for ( x = imageTL.x; x < imageBR.x; x += 4 )
+			for (x = imageTL.x; x < imageBR.x; x += 4)
 			{
 				_zr = _x_pos;
 				_zi = SIMD_SetOne(y_pos);
 				_n = SIMD_SetZero256i();
 
-			repeat:
-				_zr2 = SIMD_Mul(_zr, _zr);
+			repeat: _zr2 = SIMD_Mul(_zr, _zr);
 				_zi2 = SIMD_Mul(_zi, _zi);
 				_a = SIMD_Sub(_zr2, _zi2);
 				_a = SIMD_Add(_a, _cr);
@@ -158,11 +212,10 @@ void Julia::JuliaWorker::Compute()
 				_mask2 = SIMD_GreaterThani(_iterations, _n);
 				_mask2 = SIMD_Andi(_mask2, SIMD_CastToInt(_mask1));
 				_c = SIMD_Andi(_one, _mask2); // Zero out ones where n < iterations
-				_n = SIMD_Addi(_n, _c);       // n++ Increase all n
-				if ( SIMD_SignMask(SIMD_CastToFloat(_mask2)) > 0 )
-					goto repeat;
+				_n = SIMD_Addi(_n, _c); // n++ Increase all n
+				if (SIMD_SignMask(SIMD_CastToFloat(_mask2)) > 0) goto repeat;
 
-#if defined(__MINGW32__) 
+#if defined(__MINGW32__)
 				fractalArray[y_offset + x + 0] = static_cast<int>(_n[3]);
 				fractalArray[y_offset + x + 1] = static_cast<int>(_n[2]);
 				fractalArray[y_offset + x + 2] = static_cast<int>(_n[1]);

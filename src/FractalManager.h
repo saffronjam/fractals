@@ -21,26 +21,30 @@ public:
 private:
 	void SetFractalSet(FractalSet::Type type);
 	void SetComputeIterationCount(size_t iterations);
-	void SetJuliaC(const std::complex<double> &c);
+	void SetComputeHost(FractalSet::ComputeHost computeHost);
+	void SetJuliaC(const Complex<double> &c);
 	void SetJuliaCR(double r);
 	void SetJuliaCI(double i);
 	void SetPalette(FractalSet::Palette palette);
 	void SetMandelbrotState(Mandelbrot::State state);
 	void SetJuliaState(Julia::State state);
+	void SetAxisState(bool state);
 
 private:
-	ArrayList<std::unique_ptr<FractalSet>> _fractalSets;
+	ArrayList<Unique<FractalSet>> _fractalSets;
 	FractalSet::Type _activeFractalSet;
 
-	Pair<sf::Vector2f, sf::Vector2f> _lastViewport;
+	FractalSet::SimBox _lastViewport;
 
 	sf::Vector2f _viewportMousePosition = VecUtils::Null<>();
 
 	//// Gui cache ////
 	ArrayList<const char *> _fractalSetComboBoxNames;
 	ArrayList<const char *> _paletteComboBoxNames;
+	ArrayList<const char *> _computeHostComboBoxNames;
 	int _activeFractalSetInt = static_cast<int>(FractalSet::Type::Mandelbrot);
 	int _activePaletteInt = static_cast<int>(FractalSet::Palette::Fiery);
+	int _computeHostInt = -1;
 	int _computeIterations = 64;
 
 	// Mandelbrot
@@ -49,5 +53,8 @@ private:
 	// Julia
 	int _juliaStateInt = static_cast<int>(Julia::State::None);
 	sf::Vector2f _juliaC = VecUtils::Null<>();
+
+	// Shared
+	bool _axis = false;
 };
 }

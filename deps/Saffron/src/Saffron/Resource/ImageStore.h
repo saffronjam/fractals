@@ -2,43 +2,44 @@
 
 #include <SFML/Graphics/Image.hpp>
 
-#include "Saffron/Interface/IResourceStore.h"
+#include "Saffron/Resource/ResourceStore.h"
 
 namespace Se
 {
-class ImageStore : public IResourceStore<sf::Image>
+class ImageStore : public ResourceStore<sf::Image>
 {
 public:
-	ImageStore() = default;
-	ImageStore(const ImageStore &) = delete;
-	const ImageStore &operator()(const ImageStore &) = delete;
+	static Shared<sf::Image> Get(const Filepath& filepath, bool copy = false)
+	{
+		return Instance()._Get(filepath, copy);
+	}
 
-	static sf::Image *Get(const std::string &filepath)
+private:	
+	Shared<sf::Image> Copy(const Shared<sf::Image>& value) override
 	{
-		if ( _resources.find(filepath) == _resources.end() )
-		{
-			Load(filepath);
-		}
-		return &_resources[filepath];
+		auto resource = CreateShared<sf::Image>();
+		resource->copy(*value, 0, 0);
+		return resource;
 	}
-	// Returns copy of resource from cache, if not existing, call Load();
-	static const sf::Image &GetCopy(const std::string &filepath)
+
+	Filepath GetLocation() override
 	{
-		if ( _resources.find(filepath) == _resources.end() )
-		{
-			Load(filepath);
-		}
-		return _resources[filepath];
+		return "res/Textures/";
 	}
-	// Load resource into memory
-	static void Load(const std::string &filepath)
+
+	static ImageStore& Instance()
 	{
-		sf::Image resource;
-		if ( !resource.loadFromFile(filepath) )
-		{
-			{ char buf[200]; sprintf(buf, "Failed to load font: %s", filepath.c_str()); throw Exception(__LINE__, __FILE__, buf); };
-		}
-		_resources.emplace(std::make_pair(filepath, resource));
+		static ImageStore resourceStore;
+		return resourceStore;
+	}
+
+private:
+	Shared<sf::Image> Load(Filepath filepath) override
+	{
+		auto resource = CreateShared<sf::Image>();
+		const auto result = resource->loadFromFile(filepath.string());
+		SE_CORE_ASSERT(result, "Failed to load Image");
+		return resource;
 	}
 };
 }

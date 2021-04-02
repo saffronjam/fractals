@@ -28,7 +28,6 @@ void main()
         lightSummary += vec4(lightColors[i] * (1.0 - vecLength), 1.0);
     }
 
-
     // lookup the pixel in the texture
     vec4 pixel = texture2D(texture, gl_TexCoord[0].xy);
 

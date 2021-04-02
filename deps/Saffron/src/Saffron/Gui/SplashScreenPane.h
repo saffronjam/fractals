@@ -28,7 +28,7 @@ private:
 	String _title = "Fractals";
 
 	std::shared_ptr<BatchLoader> _batchLoader;
-	sf::Texture _texture;
+	Shared<sf::Texture> _texture;
 	bool _hidden = false;
 	bool _finished = false;
 	String _finalizingStatus;

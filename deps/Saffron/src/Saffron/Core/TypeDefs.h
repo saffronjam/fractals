@@ -20,6 +20,7 @@
 #include <deque>
 #include <stack>
 #include <list>
+#include <complex>
 
 namespace Se
 {
@@ -43,48 +44,50 @@ typedef long long Int64;
 typedef unsigned long long Uint64;
 #endif
 
-template<typename T>
+template <typename T>
 using ArrayList = std::vector<T>;
 template <class _Ty, size_t _size>
 using Array = std::array<_Ty, _size>;
-template<typename Key, typename Value>
+template <typename Key, typename Value>
 using Map = std::map<Key, Value>;
-template<typename Key, typename Value>
+template <typename Key, typename Value>
 using MultiMap = std::multimap<Key, Value>;
-template<typename Key, typename Value>
+template <typename Key, typename Value>
 using UnorderedMap = std::unordered_map<Key, Value>;
 template <class T>
 using Set = std::set<T>;
-template<typename T>
-using UnorderedSet = std::unordered_set< T>;
-template<typename T>
+template <typename T>
+using UnorderedSet = std::unordered_set<T>;
+template <typename T>
 using Deque = std::deque<T>;
-template<typename T>
+template <typename T>
 using Stack = std::stack<T>;
-template<typename T>
+template <typename T>
 using List = std::list<T>;
 
-template<class FunctionType>
+template <class FunctionType>
 using Function = std::function<FunctionType>;
-template<class... Types>
+template <class... Types>
 using Tuple = std::tuple<Types...>;
-template<typename ClassType>
+template <typename ClassType>
 using Atomic = std::atomic<ClassType>;
-template<typename FirstClass, typename SecondClass>
+template <typename FirstClass, typename SecondClass>
 using Pair = std::pair<FirstClass, SecondClass>;
-template<typename T>
+template <typename T>
 using Optional = std::optional<T>;
 template <size_t t_NumBits>
 using Bitset = std::bitset<t_NumBits>;
 template <class t_ElemType>
 using InitializerList = std::initializer_list<t_ElemType>;
+template <typename Type>
+using Complex = std::complex<Type>;
 
 // Memory
-template<typename T>
+template <typename T>
 using Unique = std::unique_ptr<T>;
-template<typename T>
+template <typename T>
 using Shared = std::shared_ptr<T>;
-template<typename T>
+template <typename T>
 using Weak = std::weak_ptr<T>;
 
 using String = std::string;
@@ -101,31 +104,58 @@ using Mutex = std::mutex;
 using ConditionVariable = std::condition_variable;
 
 
-template<class MoveClass>
-constexpr auto &&Move(MoveClass &&moveClass)
+template <class MoveClass>
+constexpr auto&& Move(MoveClass&& moveClass) noexcept
 {
-	return static_cast<std::remove_reference_t<MoveClass> &&>(moveClass);
+	return static_cast<std::remove_reference_t<MoveClass>&&>(moveClass);
 }
 
-template<class FirstClass, class SecondClass>
-constexpr auto CreatePair(FirstClass &&first, SecondClass &&second)
+template <class FirstClass, class SecondClass>
+constexpr auto CreatePair(FirstClass&& first, SecondClass&& second) noexcept
 {
-	return std::make_pair(first, second);
+	using Mypair = std::pair<std::remove_reference_t<FirstClass>, std::remove_reference_t<SecondClass>>;
+	return Mypair(std::forward<FirstClass>(first), std::forward<SecondClass>(second));
 }
 
+template <class PtrClassTo, class PtrClassFrom>
+constexpr Shared<PtrClassTo> DynamicPointerCast(Shared<PtrClassFrom>& ptr) noexcept
+{
+	return std::dynamic_pointer_cast<PtrClassTo>(ptr);
+}
+
+template <class PtrClassTo, class PtrClassFrom>
+constexpr Shared<PtrClassTo> DynamicPointerCast(const Shared<PtrClassFrom>& ptr) noexcept
+{
+	return std::dynamic_pointer_cast<PtrClassTo>(ptr);
+}
 
 // Memory
-
-template<typename T, typename ... Args>
-constexpr Unique<T> CreateUnique(Args && ... args)
+template <typename T, typename ... Args>
+constexpr Unique<T> CreateUnique(Args&& ... args)
 {
 	return std::make_unique<T>(std::forward<Args>(args)...);
 }
 
-template<typename T, typename ... Args>
-constexpr std::shared_ptr<T> CreateShared(Args && ... args)
+template <typename T, typename ... Args>
+constexpr Shared<T> CreateShared(Args&& ... args)
 {
 	return std::make_shared<T>(std::forward<Args>(args)...);
 }
 
+
+template <typename T>
+constexpr Unique<T> CreateUniqueFromDonor(T* donor)
+{
+	Unique<T> unique;
+	unique.reset(donor);
+	return unique;
+}
+
+template <typename T>
+constexpr Shared<T> CreateSharedFromDonor(T* donor)
+{
+	Shared<T> shared;
+	shared.reset(donor);
+	return shared;
+}
 }

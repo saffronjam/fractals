@@ -2,45 +2,42 @@
 
 #include <SFML/Graphics/Texture.hpp>
 
-#include "Saffron/Interface/IResourceStore.h"
-#include "Saffron/Macros/GenericThrowMacros.h"
+#include "Saffron/Resource/ResourceStore.h"
 
 namespace Se
 {
-class TextureStore : public IResourceStore<sf::Texture>
+class TextureStore : public ResourceStore<sf::Texture>
 {
 public:
-	TextureStore() = default;
-	TextureStore(const TextureStore &) = delete;
-	const TextureStore &operator()(const TextureStore &) = delete;
+	static Shared<sf::Texture> Get(const Filepath& filepath, bool copy = false)
+	{
+		return Instance()._Get(filepath, copy);
+	}
 
-	// Returns pointer resource from cache, if not existing, call Load();
-	static sf::Texture *Get(const std::string &filepath)
+private:
+	Shared<sf::Texture> Copy(const Shared<sf::Texture>& value) override
 	{
-		if ( _resources.find(filepath) == _resources.end() )
-		{
-			Load(filepath);
-		}
-		return &_resources[filepath];
+		return CreateShared<sf::Texture>(*value);
 	}
-	// Returns copy of resource from cache, if not existing, call Load();
-	static const sf::Texture &GetCopy(const std::string &filepath)
+
+	Filepath GetLocation() override
 	{
-		if ( _resources.find(filepath) == _resources.end() )
-		{
-			Load(filepath);
-		}
-		return _resources[filepath];
+		return "res/Textures/";
 	}
-	// Load resource into memory
-	static void Load(const std::string &filepath)
+
+	static TextureStore& Instance()
 	{
-		sf::Texture resource;
-		if ( !resource.loadFromFile(filepath) )
-		{
-			{ char buf[200]; sprintf(buf, "Failed to load texture: %s", filepath.c_str()); throw Exception(__LINE__, __FILE__, buf); };
-		}
-		_resources.emplace(std::make_pair(filepath, resource));
+		static TextureStore resourceStore;
+		return resourceStore;
+	}
+
+private:
+	Shared<sf::Texture> Load(Filepath filepath) override
+	{
+		auto resource = CreateShared<sf::Texture>();
+		const auto result = resource->loadFromFile(filepath.string());
+		SE_CORE_ASSERT(result, "Failed to load Texture");
+		return resource;
 	}
 };
 }

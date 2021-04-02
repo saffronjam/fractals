@@ -1,14 +1,12 @@
 #pragma once
 
-#include <optional>
-#include <vector>
-#include <set>
-
+#include <SFML/Graphics/Drawable.hpp>
+#include <SFML/Graphics/Color.hpp>
 #include <SFML/Graphics/Rect.hpp>
-#include <SFML/Graphics/ConvexShape.hpp>
+#include <SFML/Graphics/VertexArray.hpp>
 #include <jcv/jc_voronoi.h>
 
-#include <Saffron.h>
+#include "Saffron/Base.h"
 
 namespace Se
 {
@@ -93,7 +91,7 @@ private:
 	void MarkForGeneration();
 
 	void SetupUpdateCallback();
-
+	 
 	void draw(sf::RenderTarget &target, sf::RenderStates states) const override;
 
 private:

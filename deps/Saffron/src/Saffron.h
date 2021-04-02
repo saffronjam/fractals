@@ -7,6 +7,7 @@
 #include "Saffron/Base.h"
 
 #include "Saffron/Core/Application.h"
+#include "Saffron/Core/ComputeShader.h"
 #include "Saffron/Core/Global.h"
 #include "Saffron/Core/Voronoi.h"
 
@@ -28,8 +29,10 @@
 #include "Saffron/Math/Random.h"
 
 #include "Saffron/Resource/FontStore.h"
+#include "Saffron/Resource/ComputeShaderStore.h"
 #include "Saffron/Resource/ImageStore.h"
 #include "Saffron/Resource/MusicStore.h"
+#include "Saffron/Resource/ShaderStore.h"
 #include "Saffron/Resource/SoundBufferStore.h"
 #include "Saffron/Resource/TextureStore.h"
 
