@@ -16,7 +16,7 @@ public:
 private:
 	Filepath GetLocation() override
 	{
-		return "res/Shaderss/";
+		return "res/Shaders/";
 	}
 
 	static ComputeShaderStore& Instance()

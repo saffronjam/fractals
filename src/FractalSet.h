@@ -131,7 +131,7 @@ private:
 		float a;
 	};
 
-	ComputeHost _computeHost = ComputeHost::GPUPixelShader;
+	ComputeHost _computeHost = ComputeHost::CPU;
 	sf::Vector2f _desiredSimulationDimensions;
 	
 	// CPU Host
