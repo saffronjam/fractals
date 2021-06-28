@@ -32,9 +32,10 @@ jobs:
 
     - name: Commit
       run: |
+        git checkout master
         git config --global user.name "Emil Karlsson"
         git config --global user.email "own.emka@gmail.com"
         git add example/windows/
-        git commit "Automatically generated executable"
+        git commit -m "Automatically generated executable"
         git push
       
