@@ -35,12 +35,12 @@ jobs:
       run: |
         MSBuild.exe build\ALL_BUILD.vcxproj /property:Configuration=MinSizeRel /property:OutDir="../example/windows/"
 
-    #- name: Commit
-    #  run: |
-    #    git checkout master
-    #    git config --global user.name "Emil Karlsson"
-    #    git config --global user.email "own.emka@gmail.com"
-    #    git add example/windows/
-    #    git commit -m "Automatically generated executable"
-    #    git push
+    - name: Commit
+      run: |
+        git checkout master
+        git config --global user.name "Emil Karlsson"
+        git config --global user.email "own.emka@gmail.com"
+        git add example/windows/
+        git commit -m "[🚚 Automatic] Generated Example Executable"
+        git push
       
