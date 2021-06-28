@@ -2,11 +2,11 @@
 Visualizing Mandelbrot set and Julia sets
 
 <p align="center">
- <img src="https://github.com/saffronjam/Fractals/workflows/Build-Windows/badge.svg" alt="build">
- <img src="https://img.shields.io/badge/language-C++-blue.svg" alt="language">
- <img src="https://img.shields.io/badge/std-C++17-blue.svg" alt="c++std">
- <img src="https://img.shields.io/badge/mvsc-2017+-ff69b4.svg" alt="msvc2017+">
- <img src="https://img.shields.io/badge/gcc-8.0+-ff69b4.svg" alt="gcc-8.0+">
+  <img src="https://github.com/saffronjam/Fractals/workflows/Build-Windows/badge.svg" alt="build">
+  <img src="https://img.shields.io/badge/language-C++-blue.svg" alt="language">
+  <img src="https://img.shields.io/badge/std-C++20-blue.svg" alt="c++std">
+  <img src="https://img.shields.io/badge/mvsc-2019+-ff69b4.svg" alt="msvc2017+">
+  <img src="https://img.shields.io/badge/gcc-10.0+-ff69b4.svg" alt="gcc-8.0+">
 </p>
 
 ## Preview
