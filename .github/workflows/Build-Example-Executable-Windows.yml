@@ -28,14 +28,17 @@ jobs:
 
     - name: Build project
       # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
-
-    - name: Commit
+      # run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
       run: |
-        git checkout master
-        git config --global user.name "Emil Karlsson"
-        git config --global user.email "own.emka@gmail.com"
-        git add example/windows/
-        git commit -m "Automatically generated executable"
-        git push
+        cd build
+        MSBuild.exe "Client.vcxproj" /property:Configuration=MinSizeRel /property:OutDir="example/windows/"
+
+    #- name: Commit
+    #  run: |
+    #    git checkout master
+    #    git config --global user.name "Emil Karlsson"
+    #    git config --global user.email "own.emka@gmail.com"
+    #    git add example/windows/
+    #    git commit -m "Automatically generated executable"
+    #    git push
       
