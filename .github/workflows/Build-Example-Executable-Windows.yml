@@ -28,7 +28,7 @@ jobs:
 
     - name: Build project
       # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/bin --config ${{env.BUILD_TYPE}}
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
     - name: Commit
       run: |
