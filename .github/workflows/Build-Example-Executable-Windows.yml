@@ -16,12 +16,17 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
+    - name: Checkout repository and submodules
+      uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
-    - name: Build
+    - name: Build project
       # Build your program with the given configuration
       run: cmake --build ${{github.workspace}}/bin --config ${{env.BUILD_TYPE}}
 
@@ -29,7 +34,7 @@ jobs:
       run: |
         git config --global user.name "Emil Karlsson"
         git config --global user.email "own.emka@gmail.com"
-        git add .
+        git add example/windows/
         git commit "Automatically generated executable"
         git push
       
