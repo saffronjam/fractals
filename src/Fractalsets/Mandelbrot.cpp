@@ -36,7 +36,7 @@ void Mandelbrot::OnRender(Scene& scene)
 	FractalSet::OnRender(scene);
 	if (_state == State::ComplexLines)
 	{
-		const sf::Vector2f start = scene.GetCamera().ScreenToWorld(scene.GetViewportPane().GetMousePosition());
+		const sf::Vector2f start = scene.Camera().ScreenToWorld(scene.ViewportPane().MousePosition());
 		sf::Vector2f to = start;
 		for (int i = 1; i < _computeIterations; i++)
 		{

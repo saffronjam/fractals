@@ -55,7 +55,7 @@ private:
 	float _cTransitionDuration;
 
 private:
-	struct JuliaWorker : public FractalSet::Worker
+	struct JuliaWorker : FractalSet::Worker
 	{
 		~JuliaWorker() override = default;
 		void Compute() override;

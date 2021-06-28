@@ -31,7 +31,7 @@ private:
 	void SetAxisState(bool state);
 
 private:
-	ArrayList<Unique<FractalSet>> _fractalSets;
+	List<Unique<FractalSet>> _fractalSets;
 	FractalSet::Type _activeFractalSet;
 
 	FractalSet::SimBox _lastViewport;
@@ -39,9 +39,9 @@ private:
 	sf::Vector2f _viewportMousePosition = VecUtils::Null<>();
 
 	//// Gui cache ////
-	ArrayList<const char *> _fractalSetComboBoxNames;
-	ArrayList<const char *> _paletteComboBoxNames;
-	ArrayList<const char *> _computeHostComboBoxNames;
+	List<const char *> _fractalSetComboBoxNames;
+	List<const char *> _paletteComboBoxNames;
+	List<const char *> _computeHostComboBoxNames;
 	int _activeFractalSetInt = static_cast<int>(FractalSet::Type::Mandelbrot);
 	int _activePaletteInt = static_cast<int>(FractalSet::Palette::Fiery);
 	int _computeHostInt = -1;

@@ -98,10 +98,10 @@ protected:
 	virtual void UpdatePixelShaderUniforms() = 0;
 	
 	// Fix for problem with using OpenGL freely alongside SFML
-	static void SetUniform(Uint32 id, const String &name, const sf::Vector2<double> &value);
-	static void SetUniform(Uint32 id, const String &name, float value);
-	static void SetUniform(Uint32 id, const String &name, double value);
-	static void SetUniform(Uint32 id, const String &name, int value);
+	static void SetUniform(uint id, const String &name, const sf::Vector2<double> &value);
+	static void SetUniform(uint id, const String &name, float value);
+	static void SetUniform(uint id, const String &name, double value);
+	static void SetUniform(uint id, const String &name, int value);
 
 private:
 	void UpdatePaletteTexture();
@@ -113,7 +113,7 @@ protected:
 	Type _type;
 
 	size_t _computeIterations;
-	ArrayList<Worker*> _workers;
+	List<Worker*> _workers;
 	Atomic<size_t> _nWorkerComplete;
 
 	int _simWidth;
@@ -131,7 +131,7 @@ private:
 		float a;
 	};
 
-	ComputeHost _computeHost = ComputeHost::GPUPixelShader;
+	ComputeHost _computeHost = ComputeHost::CPU;
 	sf::Vector2f _desiredSimulationDimensions;
 	
 	// CPU Host
@@ -162,7 +162,7 @@ private:
 	Array<TransitionColor, 256> _colorsCurrent;
 	float _colorTransitionTimer;
 	float _colorTransitionDuration;
-	ArrayList<Shared<sf::Image>> _palettes;
+	List<Shared<sf::Image>> _palettes;
 
 	// Axis
 	bool _drawAxis = false;
