@@ -24,9 +24,9 @@ FractalManager::FractalManager(const sf::Vector2f& renderSize) :
 
 void FractalManager::OnUpdate(Scene& scene)
 {
-	if (scene.GetViewportPane().GetViewportSize().x < 200 || scene.GetViewportPane().GetViewportSize().y < 200) return;
+	if (scene.ViewportPane().ViewportSize().x < 200 || scene.ViewportPane().ViewportSize().y < 200) return;
 
-	const auto& viewport = scene.GetCamera().GetViewport();
+	const auto& viewport = scene.Camera().Viewport();
 	const FractalSet::SimBox sbViewport(FractalSet::Position(viewport.first.x, viewport.first.y),
 	                                    FractalSet::Position(viewport.second.x, viewport.second.y));
 
@@ -42,10 +42,10 @@ void FractalManager::OnUpdate(Scene& scene)
 
 void FractalManager::OnRender(Scene& scene)
 {
-	if (scene.GetViewportPane().GetViewportSize().x < 200 || scene.GetViewportPane().GetViewportSize().y < 200) return;
+	if (scene.ViewportPane().ViewportSize().x < 200 || scene.ViewportPane().ViewportSize().y < 200) return;
 
 	_fractalSets.at(static_cast<int>(_activeFractalSet))->OnRender(scene);
-	_viewportMousePosition = scene.GetViewportPane().GetMousePosition();
+	_viewportMousePosition = scene.ViewportPane().MousePosition();
 }
 
 void FractalManager::OnGuiRender()
@@ -98,7 +98,7 @@ void FractalManager::OnGuiRender()
 		SetAxisState(_axis);
 	}
 
-	if (Gui::Property("Iterations", _computeIterations, 10, 800, 1, Gui::PropertyFlag_Slider))
+	if (Gui::Property("Iterations", _computeIterations, 10, 800, 1, GuiPropertyFlag_Slider))
 	{
 		SetComputeIterationCount(_computeIterations);
 	}

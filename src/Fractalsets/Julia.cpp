@@ -31,7 +31,7 @@ void Julia::OnUpdate(Scene& scene)
 		const double x = 0.7885 * std::cos(_animationTimer);
 		const double y = 0.7885 * std::sin(_animationTimer);
 		SetC(Complex<double>(x, y), false);
-		_animationTimer += Global::Clock::GetFrameTime().asSeconds() / 2.0f;
+		_animationTimer += Global::Clock::FrameTime().asSeconds() / 2.0f;
 		if (_animationTimer > 2.0f * PI<>)
 		{
 			_animationTimer = 0.0f;
@@ -40,9 +40,9 @@ void Julia::OnUpdate(Scene& scene)
 	}
 	case State::FollowCursor:
 	{
-		if (scene.GetViewportPane().IsHovered() && !Keyboard::IsDown(sf::Keyboard::Key::LControl))
+		if (scene.ViewportPane().Hovered() && !Keyboard::IsDown(sf::Keyboard::Key::LControl))
 		{
-			const auto mousePos = scene.GetCamera().ScreenToWorld(scene.GetViewportPane().GetMousePosition());
+			const auto mousePos = scene.Camera().ScreenToWorld(scene.ViewportPane().MousePosition());
 			SetC(Complex<double>(mousePos.x, mousePos.y), false);
 		}
 		break;
@@ -60,7 +60,7 @@ void Julia::OnUpdate(Scene& scene)
 		const float delta = (std::sin((_cTransitionTimer / _cTransitionDuration) * PI<> - PI<> / 2.0f) + 1.0f) / 2.0f;
 		_currentC.real(_startC.real() + static_cast<double>(delta) * (_desiredC.real() - _startC.real()));
 		_currentC.imag(_startC.imag() + static_cast<double>(delta) * (_desiredC.imag() - _startC.imag()));
-		_cTransitionTimer += Global::Clock::GetFrameTime().asSeconds();
+		_cTransitionTimer += Global::Clock::FrameTime().asSeconds();
 	}
 	else if (_state != State::None)
 	{

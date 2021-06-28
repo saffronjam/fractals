@@ -1,0 +1,3 @@
+[submodule "deps/SaffronEngine2D"]
+	path = deps/SaffronEngine2D
+	url = https://github.com/saffronjam/SaffronEngine2D
