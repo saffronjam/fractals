@@ -2,6 +2,7 @@
 Visualizing Mandelbrot set and Julia sets
 
 <p align="center">
+ <img src="https://github.com/saffronjam/Fractals/workflows/Build-Windows/badge.svg" alt="build">
  <img src="https://img.shields.io/badge/language-C++-blue.svg" alt="language">
  <img src="https://img.shields.io/badge/std-C++17-blue.svg" alt="c++std">
  <img src="https://img.shields.io/badge/mvsc-2017+-ff69b4.svg" alt="msvc2017+">
