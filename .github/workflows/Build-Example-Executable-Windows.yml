@@ -1,0 +1,49 @@
+name: Build-Windows
+
+on:
+  pull_request:
+    branches: [ master ]
+    paths-ignore: 
+    - '**/README.md'
+  workflow_dispatch:
+
+jobs:
+  Build-Windows:
+    runs-on: windows-latest
+
+    steps:   
+    - uses: actions/checkout@v2
+
+    - name: Add msbuild to PATH
+      uses: microsoft/setup-msbuild@v1.0.2
+
+    - name: Setup premake
+      uses: abel0b/setup-premake@v1
+
+    - name: Checkout repository and submodules
+      uses: actions/checkout@v2
+      with:
+        submodules: recursive
+        
+    - name: Update submodules
+      run: |
+        git submodule update --remote
+    - name: Generate project
+      run: |
+        cd ${{github.workspace}}/Scripts
+        ./GenerateProject.bat
+
+    - name: Build project
+      run: |
+        cd ${{github.workspace}}
+        MSBuild.exe Saffron.sln /property:Configuration=Dist
+    - name: Commit
+      run: |
+        git pull
+        git checkout master
+        git config --global user.name "Emil Karlsson"
+        git config --global user.email "own.emka@gmail.com"
+        git pull
+        git add Example/windows/
+        git commit -m "[🚚 Automatic] Generated Example Executable"
+        git push
