@@ -41,7 +41,7 @@ RelWithDebInfo
 
 # Executables
 *.exe
-!example/windows/Client.exe
+!Example/windows/*.exe
 *.out
 *.app
 
@@ -49,4 +49,5 @@ RelWithDebInfo
 /Saffron/bin/
 /bin/
 build/
+Build/
 out/
