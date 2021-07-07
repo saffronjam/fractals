@@ -23,7 +23,7 @@ Run the executable under `examples/<platform>/`
   
 ## Build yourself
 
-Clone using `git clone --recurse-submodules --remote -j8 git://github.com/saffronjam/Algorithms`
+Clone using `git clone --recurse-submodules --remote -j8 git://github.com/saffronjam/Fractals`
 
 ### Windows
 Run `Scripts/GenerateProject.bat`
