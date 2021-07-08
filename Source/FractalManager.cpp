@@ -6,7 +6,7 @@ namespace Se
 {
 FractalManager::FractalManager(const sf::Vector2f& renderSize) :
 	_lastViewport(VecUtils::Null<double>(), VecUtils::Null<double>()),
-	_paletteComboBoxNames({"Fiery", "UV", "Greyscale", "Rainbow"}),
+	_paletteComboBoxNames({"Fiery", "Fiery Alt", "UV", "Greyscale", "Rainbow"}),
 	_computeHostComboBoxNames({"CPU", "GPU Compute Shader", "GPU Pixel Shader"}),
 	_precisionComboBoxNames({"32-bit", "64-bit"})
 {

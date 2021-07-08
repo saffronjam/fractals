@@ -14,6 +14,7 @@ namespace Se
 enum class FractalSetPalette
 {
 	Fiery,
+	FieryAlt,
 	UV,
 	GreyScale,
 	Rainbow
