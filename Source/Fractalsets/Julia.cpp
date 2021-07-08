@@ -5,7 +5,7 @@
 namespace Se
 {
 Julia::Julia(const sf::Vector2f& renderSize) :
-	FractalSet("Julia", Type::Julia, renderSize),
+	FractalSet("Julia", FractalSetType::Julia, renderSize),
 	_computeCS(ComputeShaderStore::Get("julia.comp")),
 	_pixelShader(ShaderStore::Get("julia.frag", sf::Shader::Fragment)),
 	_state(State::None),
@@ -70,14 +70,14 @@ void Julia::OnUpdate(Scene& scene)
 	for (auto& worker : _workers)
 	{
 		auto* juliaWorker = dynamic_cast<JuliaWorker*>(worker);
-		juliaWorker->c = _currentC;
+		juliaWorker->C = _currentC;
 	}
 
 	FractalSet::OnUpdate(scene);
 }
 
 
-const Complex<double>& Julia::GetC() const noexcept
+auto Julia::C() const noexcept -> const Complex<double>&
 {
 	return _desiredC;
 }
@@ -89,12 +89,12 @@ void Julia::SetState(State state) noexcept
 
 void Julia::SetCR(double r, bool animate)
 {
-	SetC(Complex<double>(r, GetC().imag()), animate);
+	SetC(Complex<double>(r, C().imag()), animate);
 }
 
 void Julia::SetCI(double i, bool animate)
 {
-	SetC(Complex<double>(GetC().real(), i), animate);
+	SetC(Complex<double>(C().real(), i), animate);
 }
 
 void Julia::SetC(const Complex<double>& c, bool animate)
@@ -113,7 +113,7 @@ void Julia::SetC(const Complex<double>& c, bool animate)
 	_desiredC = c;
 }
 
-Shared<ComputeShader> Julia::GetComputeShader()
+auto Julia::ComputeShader() -> Shared<class ComputeShader>
 {
 	return _computeCS;
 }
@@ -129,7 +129,7 @@ void Julia::UpdateComputeShaderUniforms()
 	_computeCS->SetInt("iterations", _computeIterations);
 }
 
-Shared<sf::Shader> Julia::GetPixelShader()
+auto Julia::PixelShader() -> Shared<sf::Shader>
 {
 	return _pixelShader;
 }
@@ -150,21 +150,21 @@ void Julia::JuliaWorker::Compute()
 {
 	while (alive)
 	{
-		std::unique_lock<Mutex> lm(mutex);
-		cvStart.wait(lm);
+		std::unique_lock lm(Mutex);
+		CvStart.wait(lm);
 		if (!alive)
 		{
-			nWorkerComplete++;
+			WorkerComplete++;
 			return;
 		}
 
-		double xScale = (fractalBR.x - fractalTL.x) / (imageBR.x - imageTL.x);
-		double yScale = (fractalBR.y - fractalTL.y) / (imageBR.y - imageTL.y);
+		double xScale = (FractalBR.x - FractalTL.x) / (ImageBR.x - ImageTL.x);
+		double yScale = (FractalBR.y - FractalTL.y) / (ImageBR.y - ImageTL.y);
 
-		double y_pos = fractalTL.y;
+		double y_pos = FractalTL.y;
 
 		int y_offset = 0;
-		int row_size = simWidth;
+		int row_size = SimWidth;
 
 		int x, y;
 
@@ -183,16 +183,16 @@ void Julia::JuliaWorker::Compute()
 		_x_pos_offsets = SIMD_Set(0.0, 1.0, 2.0, 3.0);
 		_x_pos_offsets = SIMD_Mul(_x_pos_offsets, _x_scale);
 
-		_cr = SIMD_SetOne(c.real());
-		_ci = SIMD_SetOne(-c.imag()); // The negative sign is intentional
+		_cr = SIMD_SetOne(C.real());
+		_ci = SIMD_SetOne(-C.imag()); // The negative sign is intentional
 
-		for (y = imageTL.y; y < imageBR.y; y++)
+		for (y = ImageTL.y; y < ImageBR.y; y++)
 		{
 			// Reset x_position
-			_a = SIMD_SetOne(fractalTL.x);
+			_a = SIMD_SetOne(FractalTL.x);
 			_x_pos = SIMD_Add(_a, _x_pos_offsets);
 
-			for (x = imageTL.x; x < imageBR.x; x += 4)
+			for (x = ImageTL.x; x < ImageBR.x; x += 4)
 			{
 				_zr = _x_pos;
 				_zi = SIMD_SetOne(y_pos);
@@ -221,10 +221,10 @@ void Julia::JuliaWorker::Compute()
 				fractalArray[y_offset + x + 2] = static_cast<int>(_n[1]);
 				fractalArray[y_offset + x + 3] = static_cast<int>(_n[0]);
 #elif defined (_MSC_VER)
-				fractalArray[y_offset + x + 0] = static_cast<int>(_n.m256i_i64[3]);
-				fractalArray[y_offset + x + 1] = static_cast<int>(_n.m256i_i64[2]);
-				fractalArray[y_offset + x + 2] = static_cast<int>(_n.m256i_i64[1]);
-				fractalArray[y_offset + x + 3] = static_cast<int>(_n.m256i_i64[0]);
+				FractalArray[y_offset + x + 0] = static_cast<int>(_n.m256i_i64[3]);
+				FractalArray[y_offset + x + 1] = static_cast<int>(_n.m256i_i64[2]);
+				FractalArray[y_offset + x + 2] = static_cast<int>(_n.m256i_i64[1]);
+				FractalArray[y_offset + x + 3] = static_cast<int>(_n.m256i_i64[0]);
 #endif
 
 				_x_pos = SIMD_Add(_x_pos, _x_jump);
@@ -234,7 +234,7 @@ void Julia::JuliaWorker::Compute()
 			y_offset += row_size;
 		}
 
-		++(*nWorkerComplete);
+		++(*WorkerComplete);
 	}
 }
 }
