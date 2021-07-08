@@ -2,13 +2,19 @@
 
 namespace Se
 {
-void ProjectLayer::OnAttach(std::shared_ptr<BatchLoader> &loader)
+void ProjectLayer::OnAttach(Shared<BatchLoader>& loader)
 {
 	BaseLayer::OnAttach(loader);
 
 	_fractalManager = CreateShared<FractalManager>(_scene.ViewportPane().ViewportSize());
 
 	_camera.ApplyZoom(200.0f);
+	_camera.Reset += [this]()
+	{
+		_camera.ApplyZoom(200.0f);
+		return false;
+	};
+	_camera.Disable();
 }
 
 void ProjectLayer::OnDetach()
@@ -27,18 +33,18 @@ void ProjectLayer::OnUpdate()
 void ProjectLayer::OnGuiRender()
 {
 	BaseLayer::OnGuiRender();
-	
-	if ( ImGui::Begin("Project") )
+
+	if (ImGui::Begin("Project"))
 	{
 		_fractalManager->OnGuiRender();
 	}
 	ImGui::End();
 }
 
-void ProjectLayer::OnRenderTargetResize(const sf::Vector2f &newSize)
+void ProjectLayer::OnRenderTargetResize(const sf::Vector2f& newSize)
 {
 	BaseLayer::OnRenderTargetResize(newSize);
-	_fractalManager->ResizeVertexArrays(newSize);
+	_fractalManager->OnViewportResize(newSize);
 	_scene.OnRenderTargetResize(newSize);
 }
 }

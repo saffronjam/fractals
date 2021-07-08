@@ -120,7 +120,7 @@ protected:
 	int _simHeight;
 	SimBox _simBox;
 
-	static constexpr int PaletteWidth = 256;
+	static constexpr int PaletteWidth = 2048;
 
 private:
 	struct TransitionColor
@@ -157,8 +157,8 @@ private:
 	// Animate palette change
 	FractalSetPalette _desiredPalette;
 	sf::Image _currentPalette;
-	Array<TransitionColor, 256> _colorsStart;
-	Array<TransitionColor, 256> _colorsCurrent;
+	Array<TransitionColor, PaletteWidth> _colorsStart;
+	Array<TransitionColor, PaletteWidth> _colorsCurrent;
 	float _colorTransitionTimer;
 	float _colorTransitionDuration;
 	List<Shared<sf::Image>> _palettes;

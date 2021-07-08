@@ -27,10 +27,10 @@ FractalSet::FractalSet(String name, FractalSetType type, sf::Vector2f renderSize
 	_palettes(4),
 	_axisVA(sf::PrimitiveType::Lines)
 {
-	_palettes[static_cast<int>(FractalSetPalette::Fiery)] = ImageStore::Get("Pals/fiery.png");
-	_palettes[static_cast<int>(FractalSetPalette::UV)] = ImageStore::Get("Pals/uv.png");
-	_palettes[static_cast<int>(FractalSetPalette::GreyScale)] = ImageStore::Get("Pals/greyscale.png");
-	_palettes[static_cast<int>(FractalSetPalette::Rainbow)] = ImageStore::Get("Pals/rainbow.png");
+	_palettes[static_cast<int>(FractalSetPalette::Fiery)] = ImageStore::Get("Pals/fieryRec.png");
+	_palettes[static_cast<int>(FractalSetPalette::UV)] = ImageStore::Get("Pals/uvRec.png");
+	_palettes[static_cast<int>(FractalSetPalette::GreyScale)] = ImageStore::Get("Pals/greyscaleRec.png");
+	_palettes[static_cast<int>(FractalSetPalette::Rainbow)] = ImageStore::Get("Pals/rainbowRec.png");
 
 	_currentPalette.create(PaletteWidth, 1, _palettes[static_cast<int>(_desiredPalette)]->getPixelsPtr());
 
