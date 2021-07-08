@@ -12,14 +12,14 @@ FractalManager::FractalManager(const sf::Vector2f& renderSize) :
 	_fractalSets.emplace_back(CreateUnique<Mandelbrot>(renderSize));
 	_fractalSets.emplace_back(CreateUnique<Julia>(renderSize));
 
-	_activeFractalSet = FractalSet::Type::Mandelbrot;
+	_activeFractalSet = FractalSetType::Mandelbrot;
 
 	for (const auto& fractalSet : _fractalSets)
 	{
-		_fractalSetComboBoxNames.push_back(fractalSet->GetName().c_str());
+		_fractalSetComboBoxNames.push_back(fractalSet->Name().c_str());
 	}
 
-	_computeHostInt = static_cast<int>(_fractalSets.at(static_cast<int>(_activeFractalSet))->GetComputeHost());
+	_computeHostInt = static_cast<int>(_fractalSets.at(static_cast<int>(_activeFractalSet))->ComputeHost());
 }
 
 void FractalManager::OnUpdate(Scene& scene)
@@ -57,7 +57,7 @@ void FractalManager::OnGuiRender()
 	if (ImGui::Combo("##FractalSet", &_activeFractalSetInt, _fractalSetComboBoxNames.data(),
 	                 _fractalSetComboBoxNames.size()))
 	{
-		SetFractalSet(static_cast<FractalSet::Type>(_activeFractalSetInt));
+		SetFractalSet(static_cast<FractalSetType>(_activeFractalSetInt));
 	}
 
 	ImGui::NextColumn();
@@ -67,7 +67,7 @@ void FractalManager::OnGuiRender()
 	ImGui::PushItemWidth(-1);
 	if (ImGui::Combo("##Host", &_computeHostInt, _computeHostComboBoxNames.data(), _computeHostComboBoxNames.size()))
 	{
-		SetComputeHost(static_cast<FractalSet::ComputeHost>(_computeHostInt));
+		SetComputeHost(static_cast<FractalSetComputeHost>(_computeHostInt));
 	}
 	ImGui::NextColumn();
 
@@ -81,12 +81,12 @@ void FractalManager::OnGuiRender()
 	ImGui::PushItemWidth(-1);
 	if (ImGui::Combo("##Palette", &_activePaletteInt, _paletteComboBoxNames.data(), _paletteComboBoxNames.size()))
 	{
-		SetPalette(static_cast<FractalSet::Palette>(_activePaletteInt));
+		SetPalette(static_cast<FractalSetPalette>(_activePaletteInt));
 	}
 	ImGui::NextColumn();
 	Gui::EndPropertyGrid();
 	ImGui::Dummy({1.0f, 2.0f});
-	Gui::Image(_fractalSets.at(static_cast<int>(_activeFractalSet))->GetPaletteTexture(),
+	Gui::Image(_fractalSets.at(static_cast<int>(_activeFractalSet))->PaletteTexture(),
 	           sf::Vector2f(ImGui::GetContentRegionAvailWidth(), 9.0f));
 
 	ImGui::Separator();
@@ -103,18 +103,18 @@ void FractalManager::OnGuiRender()
 		SetComputeIterationCount(_computeIterations);
 	}
 
-	if (_activeFractalSet == FractalSet::Type::Mandelbrot)
+	if (_activeFractalSet == FractalSetType::Mandelbrot)
 	{
 		if (Gui::Property("Complex lines", _complexLines))
 		{
 			SetMandelbrotState(_complexLines ? Mandelbrot::State::ComplexLines : Mandelbrot::State::None);
 		}
 	}
-	else if (_activeFractalSet == FractalSet::Type::Julia)
+	else if (_activeFractalSet == FractalSetType::Julia)
 	{
-		const auto& julia = dynamic_cast<Julia&>(*_fractalSets[static_cast<int>(FractalSet::Type::Julia)]);
-		_juliaC.x = julia.GetC().real();
-		_juliaC.y = julia.GetC().imag();
+		const auto& julia = dynamic_cast<Julia&>(*_fractalSets[static_cast<int>(FractalSetType::Julia)]);
+		_juliaC.x = julia.C().real();
+		_juliaC.y = julia.C().imag();
 		ImGui::Text("R: ");
 		ImGui::SameLine();
 		ImGui::PushItemWidth(-1);
@@ -153,7 +153,7 @@ void FractalManager::ResizeVertexArrays(const sf::Vector2f& size)
 	}
 }
 
-void FractalManager::SetFractalSet(FractalSet::Type type)
+void FractalManager::SetFractalSet(FractalSetType type)
 {
 	_activeFractalSet = type;
 	_fractalSets.at(static_cast<int>(_activeFractalSet))->MarkForImageComputation();
@@ -172,7 +172,7 @@ void FractalManager::SetComputeIterationCount(size_t iterations)
 	}
 }
 
-void FractalManager::SetComputeHost(FractalSet::ComputeHost computeHost)
+void FractalManager::SetComputeHost(FractalSetComputeHost computeHost)
 {
 	for (const auto& fractalSet : _fractalSets)
 	{
@@ -184,26 +184,26 @@ void FractalManager::SetComputeHost(FractalSet::ComputeHost computeHost)
 
 void FractalManager::SetJuliaC(const Complex<double>& c)
 {
-	auto& juliaSet = dynamic_cast<Julia&>(*_fractalSets[static_cast<int>(FractalSet::Type::Julia)]);
+	auto& juliaSet = dynamic_cast<Julia&>(*_fractalSets[static_cast<int>(FractalSetType::Julia)]);
 	juliaSet.SetC(c, true);
 	juliaSet.MarkForImageRendering();
 }
 
 void FractalManager::SetJuliaCR(double r)
 {
-	auto& juliaSet = dynamic_cast<Julia&>(*_fractalSets[static_cast<int>(FractalSet::Type::Julia)]);
+	auto& juliaSet = dynamic_cast<Julia&>(*_fractalSets[static_cast<int>(FractalSetType::Julia)]);
 	juliaSet.SetCR(r, false);
 	juliaSet.MarkForImageRendering();
 }
 
 void FractalManager::SetJuliaCI(double i)
 {
-	auto& juliaSet = dynamic_cast<Julia&>(*_fractalSets[static_cast<int>(FractalSet::Type::Julia)]);
+	auto& juliaSet = dynamic_cast<Julia&>(*_fractalSets[static_cast<int>(FractalSetType::Julia)]);
 	juliaSet.SetCI(i, false);
 	juliaSet.MarkForImageRendering();
 }
 
-void FractalManager::SetPalette(FractalSet::Palette palette)
+void FractalManager::SetPalette(FractalSetPalette palette)
 {
 	for (auto& fractalSet : _fractalSets)
 	{
@@ -214,13 +214,13 @@ void FractalManager::SetPalette(FractalSet::Palette palette)
 
 void FractalManager::SetMandelbrotState(Mandelbrot::State state)
 {
-	auto& mandelbrotSet = dynamic_cast<Mandelbrot&>(*_fractalSets[static_cast<int>(FractalSet::Type::Mandelbrot)]);
+	auto& mandelbrotSet = dynamic_cast<Mandelbrot&>(*_fractalSets[static_cast<int>(FractalSetType::Mandelbrot)]);
 	mandelbrotSet.SetState(state);
 }
 
 void FractalManager::SetJuliaState(Julia::State state)
 {
-	auto& juliaSet = dynamic_cast<Julia&>(*_fractalSets[static_cast<int>(FractalSet::Type::Julia)]);
+	auto& juliaSet = dynamic_cast<Julia&>(*_fractalSets[static_cast<int>(FractalSetType::Julia)]);
 	juliaSet.SetState(state);
 }
 

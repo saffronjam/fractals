@@ -2,10 +2,11 @@
 
 #include <glad/glad.h>
 #include <SFML/Graphics/RectangleShape.hpp>
+#include <SFML/Graphics/Sprite.hpp>
 
 namespace Se
 {
-FractalSet::FractalSet(String name, Type type, sf::Vector2f renderSize) :
+FractalSet::FractalSet(String name, FractalSetType type, sf::Vector2f renderSize) :
 	_name(Move(name)),
 	_type(type),
 	_computeIterations(64),
@@ -20,18 +21,18 @@ FractalSet::FractalSet(String name, Type type, sf::Vector2f renderSize) :
 	_recomputeImage(true),
 	_reconstructImage(true),
 	_shouldResize(false),
-	_desiredPalette(Fiery),
+	_desiredPalette(FractalSetPalette::Fiery),
 	_colorTransitionTimer(0.0f),
 	_colorTransitionDuration(0.7f),
 	_palettes(4),
 	_axisVA(sf::PrimitiveType::Lines)
 {
-	_palettes[Fiery] = ImageStore::Get("Pals/fiery.png");
-	_palettes[UV] = ImageStore::Get("Pals/uv.png");
-	_palettes[GreyScale] = ImageStore::Get("Pals/greyscale.png");
-	_palettes[Rainbow] = ImageStore::Get("Pals/rainbow.png");
+	_palettes[static_cast<int>(FractalSetPalette::Fiery)] = ImageStore::Get("Pals/fiery.png");
+	_palettes[static_cast<int>(FractalSetPalette::UV)] = ImageStore::Get("Pals/uv.png");
+	_palettes[static_cast<int>(FractalSetPalette::GreyScale)] = ImageStore::Get("Pals/greyscale.png");
+	_palettes[static_cast<int>(FractalSetPalette::Rainbow)] = ImageStore::Get("Pals/rainbow.png");
 
-	_currentPalette.create(PaletteWidth, 1, _palettes[_desiredPalette]->getPixelsPtr());
+	_currentPalette.create(PaletteWidth, 1, _palettes[static_cast<int>(_desiredPalette)]->getPixelsPtr());
 
 	for (int i = 0; i < PaletteWidth; i++)
 	{
@@ -81,7 +82,7 @@ FractalSet::FractalSet(String name, Type type, sf::Vector2f renderSize) :
 	for (int i = -range; i <= range; i++)
 	{
 		float offset = lineOffset1000;
-		if(i % 1000 == 0)
+		if (i % 1000 == 0)
 		{
 			offset = lineOffset1;
 		}
@@ -93,7 +94,7 @@ FractalSet::FractalSet(String name, Type type, sf::Vector2f renderSize) :
 		{
 			offset = lineOffset100;
 		}
-		
+
 		_axisVA.append(sf::Vertex(sf::Vector2f(static_cast<float>(i) / 1000.0f, -offset), sf::Color::White));
 		_axisVA.append(sf::Vertex(sf::Vector2f(static_cast<float>(i) / 1000.0f, offset), sf::Color::White));
 		_axisVA.append(sf::Vertex(sf::Vector2f(-offset, static_cast<float>(i) / 1000.0f), sf::Color::White));
@@ -106,9 +107,9 @@ FractalSet::~FractalSet()
 	for (auto& worker : _workers)
 	{
 		worker->alive = false;
-		worker->cvStart.notify_all();
-		if (worker->thread.joinable()) worker->thread.join();
-		worker->fractalArray = nullptr;
+		worker->CvStart.notify_all();
+		if (worker->Thread.joinable()) worker->Thread.join();
+		worker->FractalArray = nullptr;
 		delete worker;
 		worker = nullptr;
 	}
@@ -126,7 +127,7 @@ void FractalSet::OnUpdate(Scene& scene)
 			2.0f;
 		for (int x = 0; x < PaletteWidth; x++)
 		{
-			const auto pix = _palettes[_desiredPalette]->getPixel(x, 0);
+			const auto pix = _palettes[static_cast<int>(_desiredPalette)]->getPixel(x, 0);
 			const TransitionColor goalColor = {
 				static_cast<float>(pix.r) / 255.0f, static_cast<float>(pix.g) / 255.0f,
 				static_cast<float>(pix.b) / 255.0f, static_cast<float>(pix.a) / 255.0f
@@ -155,13 +156,13 @@ void FractalSet::OnRender(Scene& scene)
 	scene.ActivateScreenSpaceDrawing();
 	switch (_computeHost)
 	{
-	case ComputeHost::CPU:
+	case FractalSetComputeHost::CPU:
 	{
 		scene.Submit(_vertexArray);
 		break;
 	}
-	case ComputeHost::GPUComputeShader:
-	case ComputeHost::GPUPixelShader:
+	case FractalSetComputeHost::GPUComputeShader:
+	case FractalSetComputeHost::GPUPixelShader:
 	{
 		scene.Submit(sf::Sprite(_shaderBasedHostTarget.getTexture()));
 		break;
@@ -187,30 +188,30 @@ void FractalSet::MarkForImageComputation() noexcept
 
 void FractalSet::AddWorker(Worker* worker)
 {
-	worker->nWorkerComplete = &_nWorkerComplete;
-	worker->fractalArray = _fractalArray;
-	worker->simWidth = _simWidth;
+	worker->WorkerComplete = &_nWorkerComplete;
+	worker->FractalArray = _fractalArray;
+	worker->SimWidth = _simWidth;
 	worker->alive = true;
-	worker->thread = Thread(&Worker::Compute, worker);
+	worker->Thread = Thread(&Worker::Compute, worker);
 	_workers.push_back(worker);
 }
 
-const String& FractalSet::GetName() const noexcept
+auto FractalSet::Name() const noexcept -> const String&
 {
 	return _name;
 }
 
-FractalSet::Type FractalSet::GetType() const
+auto FractalSet::Type() const -> FractalSetType
 {
 	return _type;
 }
 
-FractalSet::ComputeHost FractalSet::GetComputeHost() const
+auto FractalSet::ComputeHost() const -> FractalSetComputeHost
 {
 	return _computeHost;
 }
 
-void FractalSet::SetComputeHost(ComputeHost computeHost)
+void FractalSet::SetComputeHost(FractalSetComputeHost computeHost)
 {
 	_computeHost = computeHost;
 	// Force resize as resize is only applied to the current compute host
@@ -223,7 +224,7 @@ void FractalSet::Resize(const sf::Vector2f& size)
 	_shouldResize = true;
 }
 
-const sf::Texture& FractalSet::GetPaletteTexture() const
+auto FractalSet::PaletteTexture() const -> const sf::Texture&
 {
 	return _paletteTexture;
 }
@@ -238,7 +239,7 @@ void FractalSet::SetComputeIterationCount(size_t iterations) noexcept
 	_computeIterations = iterations;
 }
 
-void FractalSet::SetPalette(Palette palette) noexcept
+void FractalSet::SetPalette(FractalSetPalette palette) noexcept
 {
 	_desiredPalette = palette;
 	_colorTransitionTimer = 0.0f;
@@ -319,7 +320,7 @@ void FractalSet::ComputeImage()
 
 			switch (_computeHost)
 			{
-			case ComputeHost::CPU:
+			case FractalSetComputeHost::CPU:
 			{
 				_vertexArray.resize(_simWidth * _simHeight);
 				for (size_t i = 0; i < _vertexArray.getVertexCount(); i++)
@@ -333,13 +334,13 @@ void FractalSet::ComputeImage()
 				_fractalArray = new int[_simWidth * _simHeight];
 				for (auto* worker : _workers)
 				{
-					worker->fractalArray = _fractalArray;
-					worker->simWidth = _simWidth;
+					worker->FractalArray = _fractalArray;
+					worker->SimWidth = _simWidth;
 				}
 				break;
 			}
 
-			case ComputeHost::GPUComputeShader:
+			case FractalSetComputeHost::GPUComputeShader:
 			{
 				if (_simWidth != _outputCS.getSize().x || _simHeight != _outputCS.getSize().y)
 				{
@@ -358,7 +359,7 @@ void FractalSet::ComputeImage()
 				}
 				break;
 			}
-			case ComputeHost::GPUPixelShader:
+			case FractalSetComputeHost::GPUPixelShader:
 			{
 				if (_simWidth != _outputCS.getSize().x || _simHeight != _outputCS.getSize().y)
 				{
@@ -380,7 +381,7 @@ void FractalSet::ComputeImage()
 
 		switch (_computeHost)
 		{
-		case ComputeHost::CPU:
+		case FractalSetComputeHost::CPU:
 		{
 			const double imageSectionWidth = static_cast<double>(_simWidth) / static_cast<double>(_workers.size());
 			const double fractalSectionWidth = static_cast<double>(_simBox.BottomRight.x - _simBox.TopLeft.x) /
@@ -390,16 +391,16 @@ void FractalSet::ComputeImage()
 
 			for (size_t i = 0; i < _workers.size(); i++)
 			{
-				_workers[i]->imageTL = sf::Vector2<double>(imageSectionWidth * i, 0.0f);
-				_workers[i]->imageBR = sf::Vector2<double>(imageSectionWidth * static_cast<double>(i + 1), _simHeight);
-				_workers[i]->fractalTL = sf::Vector2<double>(
+				_workers[i]->ImageTL = sf::Vector2<double>(imageSectionWidth * i, 0.0);
+				_workers[i]->ImageBR = sf::Vector2<double>(imageSectionWidth * static_cast<double>(i + 1), _simHeight);
+				_workers[i]->FractalTL = sf::Vector2<double>(
 					_simBox.TopLeft.x + static_cast<double>(fractalSectionWidth * i), _simBox.TopLeft.y);
-				_workers[i]->fractalBR = sf::Vector2<double>(
+				_workers[i]->FractalBR = sf::Vector2<double>(
 					_simBox.TopLeft.x + fractalSectionWidth * static_cast<double>(i + 1), _simBox.BottomRight.y);
 				_workers[i]->iterations = _computeIterations;
 
-				std::unique_lock<Mutex> lm(_workers[i]->mutex);
-				_workers[i]->cvStart.notify_one();
+				std::unique_lock<Mutex> lm(_workers[i]->Mutex);
+				_workers[i]->CvStart.notify_one();
 			}
 
 			while (_nWorkerComplete < _workers.size()) // Wait for all workers to complete
@@ -407,20 +408,20 @@ void FractalSet::ComputeImage()
 			}
 			break;
 		}
-		case ComputeHost::GPUComputeShader:
+		case FractalSetComputeHost::GPUComputeShader:
 		{
 			glBindImageTexture(0, _outputCS.getNativeHandle(), 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
 			UpdateComputeShaderUniforms();
-			auto fractalSetCS = GetComputeShader();
+			auto fractalSetCS = ComputeShader();
 			fractalSetCS->Dispatch(_simWidth, _simHeight, 1);
 
 			ComputeShader::AwaitFinish();
 			break;
 		}
-		case ComputeHost::GPUPixelShader:
+		case FractalSetComputeHost::GPUPixelShader:
 		{
 			UpdatePixelShaderUniforms();
-			const auto pixelShader = GetPixelShader();
+			const auto pixelShader = PixelShader();
 
 			sf::RectangleShape simRectShape(sf::Vector2f(_simWidth, _simHeight));
 			simRectShape.setTexture(&_paletteTexture);
@@ -438,7 +439,7 @@ void FractalSet::RenderImage()
 	{
 		switch (_computeHost)
 		{
-		case ComputeHost::CPU:
+		case FractalSetComputeHost::CPU:
 		{
 			const auto* const colorPal = _currentPalette.getPixelsPtr();
 			for (int y = 0; y < _simHeight; y++)
@@ -456,10 +457,10 @@ void FractalSet::RenderImage()
 			}
 			break;
 		}
-		case ComputeHost::GPUComputeShader:
-		case ComputeHost::GPUPixelShader:
+		case FractalSetComputeHost::GPUComputeShader:
+		case FractalSetComputeHost::GPUPixelShader:
 		{
-			const auto outputHandle = _computeHost == ComputeHost::GPUComputeShader
+			const auto outputHandle = _computeHost == FractalSetComputeHost::GPUComputeShader
 				                          ? _outputCS.getNativeHandle()
 				                          : _outputPS.getTexture().getNativeHandle();
 

@@ -6,35 +6,35 @@
 #include <condition_variable>
 
 #include <SFML/Graphics/Image.hpp>
-#include <SFML/Graphics/Sprite.hpp>
 
 #include <Saffron.h>
 
 namespace Se
 {
+enum class FractalSetPalette
+{
+	Fiery,
+	UV,
+	GreyScale,
+	Rainbow
+};
+
+enum class FractalSetType
+{
+	Mandelbrot,
+	Julia
+};
+
+enum class FractalSetComputeHost
+{
+	CPU,
+	GPUComputeShader,
+	GPUPixelShader
+};
+
 class FractalSet
 {
 public:
-	enum Palette
-	{
-		Fiery,
-		UV,
-		GreyScale,
-		Rainbow
-	};
-
-	enum class Type
-	{
-		Mandelbrot,
-		Julia
-	};
-
-	enum class ComputeHost
-	{
-		CPU,
-		GPUComputeShader,
-		GPUPixelShader
-	};
 
 	using Position = sf::Vector2<double>;
 
@@ -49,12 +49,12 @@ public:
 		{
 		}
 
-		bool operator==(const SimBox& other) const
+		auto operator==(const SimBox& other) const -> bool
 		{
 			return TopLeft == other.TopLeft && BottomRight == other.BottomRight;
 		}
 
-		bool operator!=(const SimBox& other) const
+		auto operator!=(const SimBox& other) const -> bool
 		{
 			return !(*this == other);
 		}
@@ -64,7 +64,7 @@ protected:
 	struct Worker;
 
 public:
-	FractalSet(String name, Type type, sf::Vector2f renderSize);
+	FractalSet(String name, FractalSetType type, sf::Vector2f renderSize);
 	virtual ~FractalSet();
 
 	virtual void OnUpdate(Scene& scene);
@@ -74,34 +74,34 @@ public:
 	void MarkForImageRendering() noexcept;
 	void AddWorker(Worker* worker);
 
-	const String& GetName() const noexcept;
-	Type GetType() const;
-	
-	ComputeHost GetComputeHost() const;
-	void SetComputeHost(ComputeHost computeHost);
+	auto Name() const noexcept -> const String&;
+	auto Type() const -> FractalSetType;
+
+	auto ComputeHost() const -> FractalSetComputeHost;
+	void SetComputeHost(FractalSetComputeHost computeHost);
 
 	void Resize(const sf::Vector2f& size);
 
-	const sf::Texture& GetPaletteTexture() const;
+	auto PaletteTexture() const -> const sf::Texture&;
 	void SetSimBox(const SimBox& box);
 	void SetComputeIterationCount(size_t iterations) noexcept;
-	void SetPalette(Palette palette) noexcept;
+	void SetPalette(FractalSetPalette palette) noexcept;
 
 	void ActivateAxis();
 	void DeactivateAxis();
 
 protected:
-	virtual Shared<ComputeShader> GetComputeShader() = 0;
+	virtual auto ComputeShader() -> Shared<ComputeShader> = 0;
 	virtual void UpdateComputeShaderUniforms() = 0;
 
-	virtual Shared<sf::Shader> GetPixelShader() = 0;
+	virtual auto PixelShader() -> Shared<sf::Shader> = 0;
 	virtual void UpdatePixelShaderUniforms() = 0;
-	
+
 	// Fix for problem with using OpenGL freely alongside SFML
-	static void SetUniform(uint id, const String &name, const sf::Vector2<double> &value);
-	static void SetUniform(uint id, const String &name, float value);
-	static void SetUniform(uint id, const String &name, double value);
-	static void SetUniform(uint id, const String &name, int value);
+	static void SetUniform(uint id, const String& name, const sf::Vector2<double>& value);
+	static void SetUniform(uint id, const String& name, float value);
+	static void SetUniform(uint id, const String& name, double value);
+	static void SetUniform(uint id, const String& name, int value);
 
 private:
 	void UpdatePaletteTexture();
@@ -110,7 +110,7 @@ private:
 
 protected:
 	String _name;
-	Type _type;
+	FractalSetType _type;
 
 	size_t _computeIterations;
 	List<Worker*> _workers;
@@ -131,32 +131,31 @@ private:
 		float a;
 	};
 
-	ComputeHost _computeHost = ComputeHost::CPU;
+	FractalSetComputeHost _computeHost = FractalSetComputeHost::CPU;
 	sf::Vector2f _desiredSimulationDimensions;
-	
+
 	// CPU Host
 	sf::VertexArray _vertexArray;
 	int* _fractalArray;
-	
+
 	// GPU Compute Shader Host
 	sf::Texture _outputCS;
 
 	// GPU Pixel Shader Host
 	sf::RenderTexture _outputPS;
-	
+
 	// Shader Host common
 	Shared<sf::Shader> _painterPS;
 	sf::RenderTexture _shaderBasedHostTarget;
-	sf::Texture _testTex;
 	sf::Texture _paletteTexture;
-	
+
 	// Marks with true if the image should be recomputed/reconstructed this frame
 	bool _recomputeImage;
 	bool _reconstructImage;
 	bool _shouldResize;
 
 	// Animate palette change
-	Palette _desiredPalette;
+	FractalSetPalette _desiredPalette;
 	sf::Image _currentPalette;
 	Array<TransitionColor, 256> _colorsStart;
 	Array<TransitionColor, 256> _colorsCurrent;
@@ -174,22 +173,22 @@ protected:
 		virtual ~Worker() = default;
 		virtual void Compute() = 0;
 
-		Atomic<size_t>* nWorkerComplete = nullptr;
+		Atomic<size_t>* WorkerComplete = nullptr;
 
-		int* fractalArray;
-		int simWidth = 0;
+		int* FractalArray;
+		int SimWidth = 0;
 
-		Position imageTL = {0.0, 0.0};
-		Position imageBR = {0.0, 0.0};
-		Position fractalTL = {0.0, 0.0};
-		Position fractalBR = {0.0, 0.0};
+		Position ImageTL = {0.0, 0.0};
+		Position ImageBR = {0.0, 0.0};
+		Position FractalTL = {0.0, 0.0};
+		Position FractalBR = {0.0, 0.0};
 
 		size_t iterations = 0;
 		bool alive = true;
 
-		Thread thread;
-		ConditionVariable cvStart;
-		Mutex mutex;
+		Thread Thread;
+		ConditionVariable CvStart;
+		Mutex Mutex;
 	};
 };
 }

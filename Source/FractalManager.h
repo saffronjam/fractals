@@ -19,20 +19,20 @@ public:
 	void ResizeVertexArrays(const sf::Vector2f &size);
 
 private:
-	void SetFractalSet(FractalSet::Type type);
+	void SetFractalSet(FractalSetType type);
 	void SetComputeIterationCount(size_t iterations);
-	void SetComputeHost(FractalSet::ComputeHost computeHost);
+	void SetComputeHost(FractalSetComputeHost computeHost);
 	void SetJuliaC(const Complex<double> &c);
 	void SetJuliaCR(double r);
 	void SetJuliaCI(double i);
-	void SetPalette(FractalSet::Palette palette);
+	void SetPalette(FractalSetPalette palette);
 	void SetMandelbrotState(Mandelbrot::State state);
 	void SetJuliaState(Julia::State state);
 	void SetAxisState(bool state);
 
 private:
 	List<Unique<FractalSet>> _fractalSets;
-	FractalSet::Type _activeFractalSet;
+	FractalSetType _activeFractalSet;
 
 	FractalSet::SimBox _lastViewport;
 
@@ -42,8 +42,8 @@ private:
 	List<const char *> _fractalSetComboBoxNames;
 	List<const char *> _paletteComboBoxNames;
 	List<const char *> _computeHostComboBoxNames;
-	int _activeFractalSetInt = static_cast<int>(FractalSet::Type::Mandelbrot);
-	int _activePaletteInt = static_cast<int>(FractalSet::Palette::Fiery);
+	int _activeFractalSetInt = static_cast<int>(FractalSetType::Mandelbrot);
+	int _activePaletteInt = static_cast<int>(FractalSetPalette::Fiery);
 	int _computeHostInt = -1;
 	int _computeIterations = 64;
 

@@ -24,8 +24,7 @@ public:
 
 	void OnUpdate(Scene &scene) override;
 
-	
-	const Complex<double>& GetC() const noexcept;
+	const Complex<double>& C() const noexcept;
 
 	void SetState(State state) noexcept;
 	void SetC(const Complex<double> &c, bool animate = false);
@@ -33,14 +32,14 @@ public:
 	void SetCI(double i, bool animate = false);
 	
 private:
-	Shared<ComputeShader> GetComputeShader() override;
+	auto ComputeShader() -> Shared<class ComputeShader> override;
 	void UpdateComputeShaderUniforms() override;
 
-	Shared<sf::Shader> GetPixelShader() override;
+	auto PixelShader() -> Shared<sf::Shader> override;
 	void UpdatePixelShaderUniforms() override;
 
 private:
-	Shared<ComputeShader> _computeCS;
+	Shared<class ComputeShader> _computeCS;
 	Shared<sf::Shader> _pixelShader;
 	
 	State _state;
@@ -55,12 +54,12 @@ private:
 	float _cTransitionDuration;
 
 private:
-	struct JuliaWorker : FractalSet::Worker
+	struct JuliaWorker : Worker
 	{
 		~JuliaWorker() override = default;
 		void Compute() override;
 
-		Complex<double> c;
+		Complex<double> C;
 	};
 };
 }

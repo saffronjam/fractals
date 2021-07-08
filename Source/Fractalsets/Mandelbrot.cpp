@@ -7,7 +7,7 @@
 namespace Se
 {
 Mandelbrot::Mandelbrot(const sf::Vector2f& renderSize) :
-	FractalSet("Mandelbrot", Type::Mandelbrot, renderSize),
+	FractalSet("Mandelbrot", FractalSetType::Mandelbrot, renderSize),
 	_computeCS(ComputeShaderStore::Get("mandelbrot.comp")),
 	_pixelShader(ShaderStore::Get("mandelbrot.frag", sf::Shader::Fragment)),
 	_state(State::None)
@@ -18,7 +18,7 @@ Mandelbrot::Mandelbrot(const sf::Vector2f& renderSize) :
 	}
 }
 
-sf::Vector2f Mandelbrot::TranslatePoint(const sf::Vector2f& point, int iterations)
+auto Mandelbrot::TranslatePoint(const sf::Vector2f& point, int iterations) -> sf::Vector2f
 {
 	const Complex<double> c(point.x, point.y);
 	Complex<double> z(0.0, 0.0);
@@ -48,7 +48,7 @@ void Mandelbrot::OnRender(Scene& scene)
 	}
 }
 
-Shared<ComputeShader> Mandelbrot::GetComputeShader()
+auto Mandelbrot::ComputeShader() -> Shared<class ComputeShader>
 {
 	return _computeCS;
 }
@@ -63,7 +63,7 @@ void Mandelbrot::UpdateComputeShaderUniforms()
 	_computeCS->SetInt("iterations", _computeIterations);
 }
 
-Shared<sf::Shader> Mandelbrot::GetPixelShader()
+auto Mandelbrot::PixelShader() -> Shared<sf::Shader>
 {
 	return _pixelShader;
 }
@@ -83,23 +83,23 @@ void Mandelbrot::MandelbrotWorker::Compute()
 {
 	while (alive)
 	{
-		std::unique_lock<Mutex> lm(mutex);
-		cvStart.wait(lm);
+		std::unique_lock lm(Mutex);
+		CvStart.wait(lm);
 		if (!alive)
 		{
-			++(*nWorkerComplete);
+			++(*WorkerComplete);
 			return;
 		}
 		// Somehow declaring this variable fixes a race condition
 		int bugfixer = 0;
 
-		double xScale = (fractalBR.x - fractalTL.x) / (imageBR.x - imageTL.x);
-		double yScale = (fractalBR.y - fractalTL.y) / (imageBR.y - imageTL.y);
+		double xScale = (FractalBR.x - FractalTL.x) / (ImageBR.x - ImageTL.x);
+		double yScale = (FractalBR.y - FractalTL.y) / (ImageBR.y - ImageTL.y);
 
-		double y_pos = fractalTL.y;
+		double y_pos = FractalTL.y;
 
 		int y_offset = 0;
-		int row_size = simWidth;
+		int row_size = SimWidth;
 
 		int x, y;
 
@@ -118,15 +118,15 @@ void Mandelbrot::MandelbrotWorker::Compute()
 		_x_pos_offsets = SIMD_Set(0.0, 1.0, 2.0, 3.0);
 		_x_pos_offsets = SIMD_Mul(_x_pos_offsets, _x_scale);
 
-		for (y = imageTL.y; y < imageBR.y; y++)
+		for (y = ImageTL.y; y < ImageBR.y; y++)
 		{
 			// Reset x_position
-			_a = SIMD_SetOne(fractalTL.x);
+			_a = SIMD_SetOne(FractalTL.x);
 			_x_pos = SIMD_Add(_a, _x_pos_offsets);
 
 			_ci = SIMD_SetOne(y_pos);
 
-			for (x = imageTL.x; x < imageBR.x; x += 4)
+			for (x = ImageTL.x; x < ImageBR.x; x += 4)
 			{
 				_cr = _x_pos;
 				_zr = SIMD_SetZero();
@@ -156,10 +156,10 @@ void Mandelbrot::MandelbrotWorker::Compute()
 				fractalArray[y_offset + x + 2] = static_cast<int>(_n[1]);
 				fractalArray[y_offset + x + 3] = static_cast<int>(_n[0]);
 #elif defined (_MSC_VER)
-				fractalArray[y_offset + x + 0] = static_cast<int>(_n.m256i_i64[3]);
-				fractalArray[y_offset + x + 1] = static_cast<int>(_n.m256i_i64[2]);
-				fractalArray[y_offset + x + 2] = static_cast<int>(_n.m256i_i64[1]);
-				fractalArray[y_offset + x + 3] = static_cast<int>(_n.m256i_i64[0]);
+				FractalArray[y_offset + x + 0] = static_cast<int>(_n.m256i_i64[3]);
+				FractalArray[y_offset + x + 1] = static_cast<int>(_n.m256i_i64[2]);
+				FractalArray[y_offset + x + 2] = static_cast<int>(_n.m256i_i64[1]);
+				FractalArray[y_offset + x + 3] = static_cast<int>(_n.m256i_i64[0]);
 #endif
 
 				_x_pos = SIMD_Add(_x_pos, _x_jump);
@@ -169,7 +169,7 @@ void Mandelbrot::MandelbrotWorker::Compute()
 			y_pos += yScale;
 			y_offset += row_size;
 		}
-		++(*nWorkerComplete);
+		++(*WorkerComplete);
 	}
 }
 }
