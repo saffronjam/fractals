@@ -2,7 +2,7 @@
 
 namespace Se
 {
-void ProjectLayer::OnAttach(Shared<BatchLoader>& loader)
+void ProjectLayer::OnAttach(Shared<Batch>& loader)
 {
 	BaseLayer::OnAttach(loader);
 

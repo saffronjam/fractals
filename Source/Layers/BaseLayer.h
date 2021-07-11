@@ -9,7 +9,7 @@ class BaseLayer : public Layer
 public:
 	BaseLayer();
 
-	void OnAttach(Shared<BatchLoader> &loader) override;
+	void OnAttach(Shared<Batch> &loader) override;
 	void OnDetach() override;
 
 	void OnPreFrame() override;
