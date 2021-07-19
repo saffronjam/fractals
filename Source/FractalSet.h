@@ -23,7 +23,8 @@ enum class FractalSetPalette
 enum class FractalSetType
 {
 	Mandelbrot,
-	Julia
+	Julia,
+	Buddhabrot
 };
 
 enum class FractalSetComputeHost
@@ -33,10 +34,17 @@ enum class FractalSetComputeHost
 	GPUPixelShader
 };
 
+enum class FractalSetGenerationType
+{
+	AutomaticGeneration,
+	DelayedGeneration,
+	ManualGeneration
+};
+
+
 class FractalSet
 {
 public:
-
 	using Position = sf::Vector2<double>;
 
 	struct SimBox
@@ -70,6 +78,7 @@ public:
 
 	virtual void OnUpdate(Scene& scene);
 	virtual void OnRender(Scene& scene);
+	virtual void OnViewportResize(const sf::Vector2f& size);
 
 	void MarkForImageComputation() noexcept;
 	void MarkForImageRendering() noexcept;
@@ -88,12 +97,32 @@ public:
 	void SetComputeIterationCount(size_t iterations) noexcept;
 	void SetPalette(FractalSetPalette palette) noexcept;
 
+	auto GenerationType() const -> FractalSetGenerationType;
+	void SetGenerationType(FractalSetGenerationType type);
+
 	void ActivateAxis();
 	void DeactivateAxis();
+
+	template <class FractalSetType>
+	auto As() -> FractalSetType&
+	{
+		return dynamic_cast<FractalSetType &>(*this);
+	}
+
+	template <class FractalSetType>
+	auto As() const -> const FractalSetType&
+	{
+		return const_cast<FractalSet&>(*this).As<FractalSetType>();
+	}
 
 protected:
 	virtual auto ComputeShader() -> Shared<ComputeShader> = 0;
 	virtual void UpdateComputeShaderUniforms() = 0;
+
+	virtual sf::Vector2u ComputeShaderWorkerDim()
+	{
+		return sf::Vector2u(_simWidth, _simHeight);
+	}
 
 	virtual auto PixelShader() -> Shared<sf::Shader> = 0;
 	virtual void UpdatePixelShaderUniforms() = 0;
@@ -123,6 +152,10 @@ protected:
 
 	static constexpr int PaletteWidth = 2048;
 
+protected:
+	FractalSetComputeHost _computeHost = FractalSetComputeHost::CPU;
+	FractalSetGenerationType _generationType = FractalSetGenerationType::AutomaticGeneration;
+
 private:
 	struct TransitionColor
 	{
@@ -132,7 +165,6 @@ private:
 		float a;
 	};
 
-	FractalSetComputeHost _computeHost = FractalSetComputeHost::CPU;
 	sf::Vector2f _desiredSimulationDimensions;
 
 	// CPU Host
@@ -141,6 +173,7 @@ private:
 
 	// GPU Compute Shader Host
 	sf::Texture _outputCS;
+	List<sf::Color> _blackColorCache;
 
 	// GPU Pixel Shader Host
 	sf::RenderTexture _outputPS;
@@ -149,6 +182,9 @@ private:
 	Shared<sf::Shader> _painterPS;
 	sf::RenderTexture _shaderBasedHostTarget;
 	sf::Texture _paletteTexture;
+
+	// Image generation
+	sf::Time _lastGeneration;
 
 	// Marks with true if the image should be recomputed/reconstructed this frame
 	bool _recomputeImage;
@@ -184,8 +220,8 @@ protected:
 		Position FractalTL = {0.0, 0.0};
 		Position FractalBR = {0.0, 0.0};
 
-		size_t iterations = 0;
-		bool alive = true;
+		size_t Iterations = 0;
+		bool Alive = true;
 
 		Thread Thread;
 		ConditionVariable CvStart;

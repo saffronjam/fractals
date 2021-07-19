@@ -54,6 +54,11 @@ project (ProjectName)
 		"Source/**.c",
 		"Source/**.hpp",
 		"Source/**.cpp",
+		"Assets/Shaders/**.*",
+    }
+
+    vpaths {
+        ["Shaders"] = { "Assets/Shaders/**.*" }
     }
 
     includedirs {

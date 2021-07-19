@@ -101,13 +101,15 @@ FractalSet::FractalSet(String name, FractalSetType type, sf::Vector2f renderSize
 		_axisVA.append(sf::Vertex(sf::Vector2f(-offset, static_cast<float>(i) / 1000.0f), sf::Color::White));
 		_axisVA.append(sf::Vertex(sf::Vector2f(offset, static_cast<float>(i) / 1000.0f), sf::Color::White));
 	}
+
+	FractalSet::OnViewportResize(sf::Vector2f(_simWidth, _simHeight));
 }
 
 FractalSet::~FractalSet()
 {
 	for (auto& worker : _workers)
 	{
-		worker->alive = false;
+		worker->Alive = false;
 		worker->CvStart.notify_all();
 		if (worker->Thread.joinable()) worker->Thread.join();
 		worker->FractalArray = nullptr;
@@ -120,6 +122,22 @@ FractalSet::~FractalSet()
 
 void FractalSet::OnUpdate(Scene& scene)
 {
+	const auto dt = Global::Clock::FrameTime();
+	const auto start = Global::Clock::SinceStart();
+
+
+	if (_generationType == FractalSetGenerationType::DelayedGeneration)
+	{
+		if (start - _lastGeneration > sf::seconds(1.0f))
+		{
+			_lastGeneration = start;
+		}
+		else
+		{
+			return;
+		}
+	}
+
 	UpdatePaletteTexture();
 
 	if (_colorTransitionTimer <= _colorTransitionDuration)
@@ -146,8 +164,9 @@ void FractalSet::OnUpdate(Scene& scene)
 			                         });
 		}
 		MarkForImageRendering();
-		_colorTransitionTimer += Global::Clock::FrameTime().asSeconds();
+		_colorTransitionTimer += dt.asSeconds();
 	}
+	
 	ComputeImage();
 	RenderImage();
 }
@@ -177,6 +196,15 @@ void FractalSet::OnRender(Scene& scene)
 	}
 }
 
+void FractalSet::OnViewportResize(const sf::Vector2f& size)
+{
+	_blackColorCache.resize(size.x * size.y);
+	for (auto& color : _blackColorCache)
+	{
+		color = sf::Color::Black;
+	}
+}
+
 void FractalSet::MarkForImageRendering() noexcept
 {
 	_reconstructImage = true;
@@ -192,7 +220,7 @@ void FractalSet::AddWorker(Worker* worker)
 	worker->WorkerComplete = &_nWorkerComplete;
 	worker->FractalArray = _fractalArray;
 	worker->SimWidth = _simWidth;
-	worker->alive = true;
+	worker->Alive = true;
 	worker->Thread = Thread(&Worker::Compute, worker);
 	_workers.push_back(worker);
 }
@@ -245,6 +273,19 @@ void FractalSet::SetPalette(FractalSetPalette palette) noexcept
 	_desiredPalette = palette;
 	_colorTransitionTimer = 0.0f;
 	_colorsStart = _colorsCurrent;
+}
+
+auto FractalSet::GenerationType() const -> FractalSetGenerationType
+{
+	return _generationType;
+}
+
+void FractalSet::SetGenerationType(FractalSetGenerationType type)
+{
+	_lastGeneration = Global::Clock::SinceStart();
+	_generationType = type;
+	MarkForImageComputation();
+	MarkForImageRendering();
 }
 
 void FractalSet::ActivateAxis()
@@ -362,7 +403,7 @@ void FractalSet::ComputeImage()
 			}
 			case FractalSetComputeHost::GPUPixelShader:
 			{
-				if (_simWidth != _outputCS.getSize().x || _simHeight != _outputCS.getSize().y)
+				if (_simWidth != _outputPS.getSize().x || _simHeight != _outputPS.getSize().y)
 				{
 					_outputPS.create(_simWidth, _simHeight);
 					_shaderBasedHostTarget.create(_simWidth, _simHeight);
@@ -385,22 +426,21 @@ void FractalSet::ComputeImage()
 		case FractalSetComputeHost::CPU:
 		{
 			const double imageSectionWidth = static_cast<double>(_simWidth) / static_cast<double>(_workers.size());
-			const double fractalSectionWidth = static_cast<double>(_simBox.BottomRight.x - _simBox.TopLeft.x) /
-				static_cast<double>(_workers.size());
+			const double fractalSectionWidth = (_simBox.BottomRight.x - _simBox.TopLeft.x) / static_cast<double>(
+				_workers.size());
 
 			_nWorkerComplete = 0;
 
 			for (size_t i = 0; i < _workers.size(); i++)
 			{
-				_workers[i]->ImageTL = sf::Vector2<double>(imageSectionWidth * i, 0.0);
+				_workers[i]->ImageTL = sf::Vector2(imageSectionWidth * i, 0.0);
 				_workers[i]->ImageBR = sf::Vector2<double>(imageSectionWidth * static_cast<double>(i + 1), _simHeight);
-				_workers[i]->FractalTL = sf::Vector2<double>(
-					_simBox.TopLeft.x + static_cast<double>(fractalSectionWidth * i), _simBox.TopLeft.y);
-				_workers[i]->FractalBR = sf::Vector2<double>(
+				_workers[i]->FractalTL = sf::Vector2(_simBox.TopLeft.x + i * fractalSectionWidth, _simBox.TopLeft.y);
+				_workers[i]->FractalBR = sf::Vector2(
 					_simBox.TopLeft.x + fractalSectionWidth * static_cast<double>(i + 1), _simBox.BottomRight.y);
-				_workers[i]->iterations = _computeIterations;
+				_workers[i]->Iterations = _computeIterations;
 
-				std::unique_lock<Mutex> lm(_workers[i]->Mutex);
+				std::unique_lock lm(_workers[i]->Mutex);
 				_workers[i]->CvStart.notify_one();
 			}
 
@@ -411,12 +451,23 @@ void FractalSet::ComputeImage()
 		}
 		case FractalSetComputeHost::GPUComputeShader:
 		{
+			// Clears texture
+			glBindTexture(GL_TEXTURE_2D, _outputCS.getNativeHandle());
+			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, _simWidth, _simHeight, GL_RGBA, GL_UNSIGNED_BYTE,
+			                _blackColorCache.data());
+			glBindTexture(GL_TEXTURE_2D, 0);
+
 			glBindImageTexture(0, _outputCS.getNativeHandle(), 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
 			UpdateComputeShaderUniforms();
 			auto fractalSetCS = ComputeShader();
-			fractalSetCS->Dispatch(_simWidth, _simHeight, 1);
 
+			const auto workerDim = ComputeShaderWorkerDim();
+			fractalSetCS->Dispatch(workerDim.x, workerDim.y, 1);
 			ComputeShader::AwaitFinish();
+
+			glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+
 			break;
 		}
 		case FractalSetComputeHost::GPUPixelShader:
@@ -469,6 +520,13 @@ void FractalSet::RenderImage()
 			glBindImageTexture(1, _paletteTexture.getNativeHandle(), 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
 			SetUniform(_painterPS->getNativeHandle(), "maxPixelValue", static_cast<float>(_computeIterations));
 			SetUniform(_painterPS->getNativeHandle(), "paletteWidth", PaletteWidth);
+
+
+			// Tmp
+			sf::RectangleShape black(sf::Vector2f(_simWidth, _simHeight));
+			black.setFillColor(sf::Color::Black);
+			_shaderBasedHostTarget.draw(black);
+
 			sf::RectangleShape simRectShape(sf::Vector2f(_simWidth, _simHeight));
 			simRectShape.setTexture(&_paletteTexture);
 			_shaderBasedHostTarget.draw(simRectShape, {_painterPS.get()});

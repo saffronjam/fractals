@@ -8,7 +8,7 @@ Julia::Julia(const sf::Vector2f& renderSize) :
 	FractalSet("Julia", FractalSetType::Julia, renderSize),
 	_computeCS(ComputeShaderStore::Get("julia.comp")),
 	_pixelShader(ShaderStore::Get("julia.frag", sf::Shader::Fragment)),
-	_state(State::None),
+	_state(JuliaState::None),
 	_desiredC(0.0, 0.0),
 	_currentC(0.0, 0.0),
 	_startC(0.0, 0.0),
@@ -26,7 +26,7 @@ void Julia::OnUpdate(Scene& scene)
 {
 	switch (_state)
 	{
-	case State::Animate:
+	case JuliaState::Animate:
 	{
 		const double x = 0.7885 * std::cos(_animationTimer);
 		const double y = 0.7885 * std::sin(_animationTimer);
@@ -38,7 +38,7 @@ void Julia::OnUpdate(Scene& scene)
 		}
 		break;
 	}
-	case State::FollowCursor:
+	case JuliaState::FollowCursor:
 	{
 		if (scene.ViewportPane().Hovered() && !Keyboard::IsDown(sf::Keyboard::Key::LControl))
 		{
@@ -55,14 +55,14 @@ void Julia::OnUpdate(Scene& scene)
 		MarkForImageComputation();
 		MarkForImageRendering();
 	}
-	if (_cTransitionTimer <= _cTransitionDuration && _state == State::None)
+	if (_cTransitionTimer <= _cTransitionDuration && _state == JuliaState::None)
 	{
 		const float delta = (std::sin((_cTransitionTimer / _cTransitionDuration) * PI<> - PI<> / 2.0f) + 1.0f) / 2.0f;
 		_currentC.real(_startC.real() + static_cast<double>(delta) * (_desiredC.real() - _startC.real()));
 		_currentC.imag(_startC.imag() + static_cast<double>(delta) * (_desiredC.imag() - _startC.imag()));
 		_cTransitionTimer += Global::Clock::FrameTime().asSeconds();
 	}
-	else if (_state != State::None)
+	else if (_state != JuliaState::None)
 	{
 		_currentC = _desiredC;
 	}
@@ -76,15 +76,44 @@ void Julia::OnUpdate(Scene& scene)
 	FractalSet::OnUpdate(scene);
 }
 
+void Julia::OnRender(Scene& scene)
+{
+	FractalSet::OnRender(scene);
+
+	if (_drawFlags & JuliaDrawFlags_Dot)
+	{
+		sf::CircleShape circle;
+		const float adjustedRadius = 10.0f / scene.Camera().Zoom();
+		const float adjustedThickness = 3.0f / scene.Camera().Zoom();
+		const sf::Vector2f position(_currentC.real(), _currentC.imag());
+		
+		circle.setPosition(position - sf::Vector2f(adjustedRadius, adjustedRadius));
+		circle.setFillColor(sf::Color(200, 50, 50));
+		circle.setOutlineColor(sf::Color(100, 100, 100));
+		circle.setOutlineThickness(adjustedThickness);
+		circle.setRadius(adjustedRadius);
+		scene.Submit(circle);
+	}
+}
 
 auto Julia::C() const noexcept -> const Complex<double>&
 {
 	return _desiredC;
 }
 
-void Julia::SetState(State state) noexcept
+JuliaDrawFlags Julia::DrawFlags() const
+{
+	return _drawFlags;
+}
+
+void Julia::SetState(JuliaState state) noexcept
 {
 	_state = state;
+}
+
+void Julia::SetDrawFlags(JuliaDrawFlags flags)
+{
+	_drawFlags = flags;
 }
 
 void Julia::SetCR(double r, bool animate)
@@ -148,11 +177,11 @@ void Julia::UpdatePixelShaderUniforms()
 
 void Julia::JuliaWorker::Compute()
 {
-	while (alive)
+	while (Alive)
 	{
 		std::unique_lock lm(Mutex);
 		CvStart.wait(lm);
-		if (!alive)
+		if (!Alive)
 		{
 			WorkerComplete++;
 			return;
@@ -176,7 +205,7 @@ void Julia::JuliaWorker::Compute()
 		_one = SIMD_SetOnei(1);
 		_two = SIMD_SetOne(2.0);
 		_four = SIMD_SetOne(4.0);
-		_iterations = SIMD_SetOnei(iterations);
+		_iterations = SIMD_SetOnei(Iterations);
 
 		_x_scale = SIMD_SetOne(xScale);
 		_x_jump = SIMD_SetOne(xScale * 4.0);

@@ -81,11 +81,11 @@ void Mandelbrot::UpdatePixelShaderUniforms()
 
 void Mandelbrot::MandelbrotWorker::Compute()
 {
-	while (alive)
+	while (Alive)
 	{
 		std::unique_lock lm(Mutex);
 		CvStart.wait(lm);
-		if (!alive)
+		if (!Alive)
 		{
 			++(*WorkerComplete);
 			return;
@@ -111,7 +111,7 @@ void Mandelbrot::MandelbrotWorker::Compute()
 		_one = SIMD_SetOnei(1);
 		_two = SIMD_SetOne(2.0);
 		_four = SIMD_SetOne(4.0);
-		_iterations = SIMD_SetOnei(iterations);
+		_iterations = SIMD_SetOnei(Iterations);
 
 		_x_scale = SIMD_SetOne(xScale);
 		_x_jump = SIMD_SetOne(xScale * 4.0);

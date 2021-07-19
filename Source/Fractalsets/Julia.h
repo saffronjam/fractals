@@ -8,29 +8,40 @@
 
 namespace Se
 {
+enum class JuliaState
+{
+	Animate,
+	FollowCursor,
+	None
+};
+
+typedef uint JuliaDrawFlags;
+
+enum JuliaDrawFlags_ : uint
+{
+	JuliaDrawFlags_None = 0u,
+	JuliaDrawFlags_Dot = 1u << 0u,
+	JuliaDrawFlags_All = 0xffffffff
+};
+
 class Julia : public FractalSet
 {
 public:
-	enum class State
-	{
-		Animate,
-		FollowCursor,
-		None
-	};
-
-public:
-	explicit Julia(const sf::Vector2f &renderSize);
+	explicit Julia(const sf::Vector2f& renderSize);
 	~Julia() override = default;
 
-	void OnUpdate(Scene &scene) override;
+	void OnUpdate(Scene& scene) override;
+	void OnRender(Scene& scene) override;
 
 	const Complex<double>& C() const noexcept;
-
-	void SetState(State state) noexcept;
-	void SetC(const Complex<double> &c, bool animate = false);
+	JuliaDrawFlags DrawFlags() const;
+	
+	void SetState(JuliaState state) noexcept;
+	void SetDrawFlags(JuliaDrawFlags flags);
+	void SetC(const Complex<double>& c, bool animate = false);
 	void SetCR(double r, bool animate = false);
 	void SetCI(double i, bool animate = false);
-	
+
 private:
 	auto ComputeShader() -> Shared<class ComputeShader> override;
 	void UpdateComputeShaderUniforms() override;
@@ -41,8 +52,9 @@ private:
 private:
 	Shared<class ComputeShader> _computeCS;
 	Shared<sf::Shader> _pixelShader;
-	
-	State _state;
+
+	JuliaState _state;
+	JuliaDrawFlags _drawFlags = JuliaDrawFlags_None;
 
 	Complex<double> _desiredC;
 	Complex<double> _currentC;

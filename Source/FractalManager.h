@@ -1,9 +1,8 @@
 #pragma once
 
-#include <complex>
-
 #include "Fractalsets/Mandelbrot.h"
 #include "Fractalsets/Julia.h"
+#include "Fractalsets/Buddhabrot.h"
 
 namespace Se
 {
@@ -33,15 +32,25 @@ private:
 	void SetJuliaCR(double r);
 	void SetJuliaCI(double i);
 	void SetPalette(FractalSetPalette palette);
+	void SetGenerationType(FractalSetGenerationType type);
 	void SetMandelbrotState(Mandelbrot::State state);
-	void SetJuliaState(Julia::State state);
+	void SetJuliaState(JuliaState state);
+	void AddJuliaDrawFlags(JuliaDrawFlags flags);
+	void RemoveJuliaDrawFlag(JuliaDrawFlags flags);
 	void SetAxisState(bool state);
 	void SetPrecision(FractalGenerationPrecision precision);
+
+	void MarkForImageComputation();
+	void MarkForImageRendering();
 
 	void UpdateHighPrecCamera();
 	void UpdateTransform();
 
 	auto GenerateSimBox(const Camera& camera) -> FractalSet::SimBox;
+
+	auto ActiveFractalSet() -> FractalSet&;
+	auto ActiveFractalSet() const -> const FractalSet&;
+	auto ActiveGenerationType() -> FractalSetGenerationType;
 
 private:
 	List<Unique<FractalSet>> _fractalSets;
@@ -51,22 +60,26 @@ private:
 
 	sf::Vector2f _viewportMousePosition = VecUtils::Null<>();
 
-	//// Gui cache ////
+	// Gui cache
 	List<const char*> _fractalSetComboBoxNames;
 	List<const char*> _paletteComboBoxNames;
 	List<const char*> _computeHostComboBoxNames;
 	List<const char*> _precisionComboBoxNames;
+	List<const char*> _fractalSetGenerationTypeNames;
 	int _activeFractalSetInt = static_cast<int>(FractalSetType::Mandelbrot);
 	int _activePaletteInt = static_cast<int>(FractalSetPalette::Fiery);
 	int _computeHostInt = -1;
 	int _activePrecisionInt = static_cast<int>(FractalGenerationPrecision::Bit64);
+	int _activeFractalSetGenerationTypeInt = static_cast<int>(FractalSetGenerationType::DelayedGeneration);
 	int _computeIterations = 64;
+	bool _juliaDrawCDot = false;
+	ulong _zoom = 200;
 
 	// Mandelbrot
 	bool _complexLines = false;
 
 	// Julia
-	int _juliaStateInt = static_cast<int>(Julia::State::None);
+	int _juliaStateInt = static_cast<int>(JuliaState::None);
 	sf::Vector2f _juliaC;
 
 	// Shared
