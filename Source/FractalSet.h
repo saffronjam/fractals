@@ -184,7 +184,7 @@ private:
 	sf::Texture _paletteTexture;
 
 	// Image generation
-	sf::Time _lastGeneration;
+	sf::Time _lastGenerationRequest;
 
 	// Marks with true if the image should be recomputed/reconstructed this frame
 	bool _recomputeImage;

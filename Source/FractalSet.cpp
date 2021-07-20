@@ -128,9 +128,9 @@ void FractalSet::OnUpdate(Scene& scene)
 
 	if (_generationType == FractalSetGenerationType::DelayedGeneration)
 	{
-		if (start - _lastGeneration > sf::seconds(1.0f))
+		if (start - _lastGenerationRequest > sf::seconds(1.0f))
 		{
-			_lastGeneration = start;
+			_lastGenerationRequest = start;
 		}
 		else
 		{
@@ -212,6 +212,7 @@ void FractalSet::MarkForImageRendering() noexcept
 
 void FractalSet::MarkForImageComputation() noexcept
 {
+	_lastGenerationRequest = Global::Clock::SinceStart();
 	_recomputeImage = true;
 }
 
@@ -282,7 +283,6 @@ auto FractalSet::GenerationType() const -> FractalSetGenerationType
 
 void FractalSet::SetGenerationType(FractalSetGenerationType type)
 {
-	_lastGeneration = Global::Clock::SinceStart();
 	_generationType = type;
 	MarkForImageComputation();
 	MarkForImageRendering();
