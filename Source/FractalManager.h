@@ -70,7 +70,7 @@ private:
 	int _activePaletteInt = static_cast<int>(FractalSetPalette::Fiery);
 	int _computeHostInt = -1;
 	int _activePrecisionInt = static_cast<int>(FractalGenerationPrecision::Bit64);
-	int _activeFractalSetGenerationTypeInt = static_cast<int>(FractalSetGenerationType::DelayedGeneration);
+	int _activeFractalSetGenerationTypeInt = static_cast<int>(FractalSetGenerationType::AutomaticGeneration);
 	int _computeIterations = 64;
 	bool _juliaDrawCDot = false;
 	ulong _zoom = 200;
