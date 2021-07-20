@@ -220,21 +220,6 @@ void FractalManager::OnGuiRender()
 		break;
 	}
 	}
-
-	ImGui::Separator();
-
-	Gui::BeginPropertyGrid();
-
-	ImGui::Text("Zoom");
-	ImGui::NextColumn();
-	ImGui::PushItemWidth(-1);
-	if(ImGui::DragScalar("##Zoom", ImGuiDataType_U64, &_zoom))
-	{
-		_cameraZoom = FractalSet::Position(_zoom, _zoom);
-	}
-	ImGui::NextColumn();
-
-	Gui::EndPropertyGrid();
 }
 
 void FractalManager::OnViewportResize(const sf::Vector2f& size)
