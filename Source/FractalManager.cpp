@@ -146,7 +146,7 @@ void FractalManager::OnGuiRender()
 		SetAxisState(_axis);
 	}
 
-	if (Gui::Property("Iterations", _computeIterations, 10, 2000, 1, GuiPropertyFlag_Slider))
+	if (Gui::Property("Iterations", _computeIterations, 10, 2000, 1, GuiPropertyFlag_Slider | GuiPropertyFlag_Logarithmic))
 	{
 		SetComputeIterationCount(_computeIterations);
 	}
