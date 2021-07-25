@@ -2,13 +2,14 @@
 
 #include <glad/glad.h>
 
+#include "ComputeHosts/ComputeShaderHost.h"
+
 namespace Se
 {
 Buddhabrot::Buddhabrot(const sf::Vector2f& renderSize) :
-	FractalSet("Buddhabrot", FractalSetType::Buddhabrot, renderSize),
-	_computeCS(ComputeShaderStore::Get("buddhabrot.comp"))
+	FractalSet("Buddhabrot", FractalSetType::Buddhabrot, renderSize)
 {
-	_computeHost = FractalSetComputeHost::GPUComputeShader;
+	_activeHost = HostType::GpuComputeShader;
 	_generationType = FractalSetGenerationType::DelayedGeneration;
 
 	const auto nPoints = static_cast<size_t>(50000);
@@ -24,6 +25,19 @@ Buddhabrot::Buddhabrot(const sf::Vector2f& renderSize) :
 	glBufferData(GL_SHADER_STORAGE_BUFFER, alloc, _points.data(), GL_DYNAMIC_DRAW);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
+
+	const auto x = renderSize.x, y = renderSize.y;
+
+	auto comHost = CreateUnique<ComputeShaderHost>("buddhabrot.comp", x, y, sf::Vector2u(x, y));
+
+	comHost->RequestUniformUpdate += [this](ComputeShader& computeShader)
+	{
+		UpdateComputeShaderUniforms(computeShader);
+		return false;
+	};
+
+	AddHost(HostType::GpuComputeShader, Move(comHost));
+
 	// Todo: Fix this
 	/*for (int i = 0; i < 32; i++)
 	{
@@ -33,8 +47,8 @@ Buddhabrot::Buddhabrot(const sf::Vector2f& renderSize) :
 
 auto Buddhabrot::TranslatePoint(const sf::Vector2f& point, int iterations) -> sf::Vector2f
 {
-	const Complex<double> c(point.x, point.y);
-	Complex<double> z(0.0, 0.0);
+	const std::complex<double> c(point.x, point.y);
+	std::complex z(0.0, 0.0);
 
 	for (int n = 0; n < iterations && abs(z) < 2.0; n++)
 	{
@@ -52,37 +66,20 @@ void Buddhabrot::OnRender(Scene& scene)
 void Buddhabrot::OnViewportResize(const sf::Vector2f& size)
 {
 	FractalSet::OnViewportResize(size);
+	const auto sizeU = VecUtils::ConvertTo<sf::Vector2u>(size);
+	_hosts.at(HostType::GpuComputeShader)->As<ComputeShaderHost>().SetDimensions(sizeU);
 }
 
-auto Buddhabrot::ComputeShader() -> Shared<class ComputeShader>
-{
-	return _computeCS;
-}
-
-void Buddhabrot::UpdateComputeShaderUniforms()
+void Buddhabrot::UpdateComputeShaderUniforms(ComputeShader& shader)
 {
 	const double xScale = (_simBox.BottomRight.x - _simBox.TopLeft.x) / static_cast<double>(_simWidth);
 	const double yScale = (_simBox.BottomRight.y - _simBox.TopLeft.y) / static_cast<double>(_simHeight);
-	_computeCS->SetVector2d("fractalTL", _simBox.TopLeft);
-	_computeCS->SetDouble("xScale", xScale);
-	_computeCS->SetDouble("yScale", yScale);
-	_computeCS->SetInt("iterations", _computeIterations);
+	shader.SetVector2d("fractalTL", _simBox.TopLeft);
+	shader.SetDouble("xScale", xScale);
+	shader.SetDouble("yScale", yScale);
+	shader.SetInt("iterations", _computeIterations);
 
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, _ssbo);
-}
-
-sf::Vector2u Buddhabrot::ComputeShaderWorkerDim()
-{
-	return sf::Vector2u(_simWidth, _simHeight);
-}
-
-auto Buddhabrot::PixelShader() -> Shared<sf::Shader>
-{
-	return nullptr;
-}
-
-void Buddhabrot::UpdatePixelShaderUniforms()
-{
 }
 
 void Buddhabrot::BuddhabrotWorker::Compute()

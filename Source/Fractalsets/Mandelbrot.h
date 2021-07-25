@@ -3,45 +3,44 @@
 #include <Saffron.h>
 
 #include "FractalSet.h"
+#include "ComputeHosts/CpuHost.h"
 
 namespace Se
 {
+typedef uint MandelbrotDrawFlags;
+
+enum MandelbrotDrawFlags_ : uint
+{
+	MandelbrotDrawFlags_None = 0u,
+	MandelbrotDrawFlags_ComplexLines = 1u << 0u,
+	MandelbrotDrawFlags_All = 0xffffffff
+};
+
 class Mandelbrot : public FractalSet
 {
-public:
-	enum class State
-	{
-		ComplexLines,
-		None
-	};
-
 public:
 	explicit Mandelbrot(const sf::Vector2f& renderSize);
 	~Mandelbrot() override = default;
 
 	void OnRender(Scene& scene) override;
+	void OnViewportResize(const sf::Vector2f& size) override;
 
-	static auto TranslatePoint(const sf::Vector2f& point, int iterations) -> sf::Vector2f;
+	auto DrawFlags() const -> MandelbrotDrawFlags;
+	void SetDrawFlags(MandelbrotDrawFlags state) noexcept;
 
-	void SetState(State state) noexcept { _state = state; }
-
-private:
-	auto ComputeShader() -> Shared<class ComputeShader> override;
-	void UpdateComputeShaderUniforms() override;
-
-	auto PixelShader() -> Shared<sf::Shader> override;
-	void UpdatePixelShaderUniforms() override;
+	static auto TranslatePoint(const sf::Vector2f& point, int iterations)->sf::Vector2f;
 
 private:
-	Shared<class ComputeShader> _computeCS;
-	Shared<sf::Shader> _pixelShader;
+	void UpdateComputeShaderUniforms(ComputeShader& shader);
+	void UpdatePixelShaderUniforms(sf::Shader& shader);
 
-	State _state;
+private:
+
+	MandelbrotDrawFlags _drawFlags;
 
 private:
 	struct MandelbrotWorker : Worker
 	{
-		~MandelbrotWorker() override = default;
 		void Compute() override;
 	};
 };

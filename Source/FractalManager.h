@@ -22,31 +22,34 @@ public:
 	void OnGuiRender();
 	void OnViewportResize(const sf::Vector2f& size);
 
-	void ResizeVertexArrays(const sf::Vector2f& size);
+	void Resize(const sf::Vector2f& size);
 
 private:
 	void SetFractalSet(FractalSetType type);
 	void SetComputeIterationCount(size_t iterations);
-	void SetComputeHost(FractalSetComputeHost computeHost);
-	void SetJuliaC(const Complex<double>& c);
-	void SetJuliaCR(double r);
-	void SetJuliaCI(double i);
-	void SetPalette(FractalSetPalette palette);
+	void SetHost(HostType computeHost);
+	void SetJuliaC(const std::complex<double>& c);
+	void SetJuliaCr(double r, bool animate);
+	void SetJuliaCi(double i, bool animate);
+	void SetPalette(PaletteType palette);
 	void SetGenerationType(FractalSetGenerationType type);
-	void SetMandelbrotState(Mandelbrot::State state);
+	void AddMandelbrotDrawFlags(MandelbrotDrawFlags flags);
+	void RemoveMandelbrotDrawFlags(MandelbrotDrawFlags flags);
 	void SetJuliaState(JuliaState state);
 	void AddJuliaDrawFlags(JuliaDrawFlags flags);
-	void RemoveJuliaDrawFlag(JuliaDrawFlags flags);
+	void RemoveJuliaDrawFlags(JuliaDrawFlags flags);
 	void SetAxisState(bool state);
 	void SetPrecision(FractalGenerationPrecision precision);
-
+	void PauseJuliaAnimation();
+	void ResumeJuliaAnimation();
+	
 	void MarkForImageComputation();
 	void MarkForImageRendering();
 
 	void UpdateHighPrecCamera();
 	void UpdateTransform();
 
-	auto GenerateSimBox(const Camera& camera) -> FractalSet::SimBox;
+	auto GenerateSimBox(const Camera& camera) const -> SimBox;
 
 	auto ActiveFractalSet() -> FractalSet&;
 	auto ActiveFractalSet() const -> const FractalSet&;
@@ -54,30 +57,45 @@ private:
 
 private:
 	List<Unique<FractalSet>> _fractalSets;
-	FractalSetType _activeFractalSet;
+	FractalSetType _activeFractalSetType;
 
-	FractalSet::SimBox _lastViewport;
+	SimBox _lastViewport;
 
 	sf::Vector2f _viewportMousePosition = VecUtils::Null<>();
 
 	// Gui cache
 	List<const char*> _fractalSetComboBoxNames;
 	List<const char*> _paletteComboBoxNames;
-	List<const char*> _computeHostComboBoxNames;
 	List<const char*> _precisionComboBoxNames;
 	List<const char*> _fractalSetGenerationTypeNames;
+	List<const char*> _hostNamesCache;
+	List<HostType> _hostTypeCache;
 	int _activeFractalSetInt = static_cast<int>(FractalSetType::Mandelbrot);
-	int _activePaletteInt = static_cast<int>(FractalSetPalette::Fiery);
-	int _computeHostInt = -1;
+	int _activePaletteInt = static_cast<int>(PaletteType::Fiery);
+	int _hostInt = -1;
 	int _activePrecisionInt = static_cast<int>(FractalGenerationPrecision::Bit64);
-	int _activeFractalSetGenerationTypeInt = static_cast<int>(FractalSetGenerationType::AutomaticGeneration);
+	int _fractalSetGenerationTypeInt = static_cast<int>(FractalSetGenerationType::AutomaticGeneration);
 	int _computeIterations = 64;
+	bool _juliaDrawComplexLines = false;
+	bool _mandelbrotDrawComplexLines = false;
 	bool _juliaDrawCDot = false;
 	ulong _zoom = 200;
 
-	// Mandelbrot
-	bool _complexLines = false;
+	// Animate camera movement
+	Position _desiredCameraPos;
+	Position _startPos;
+	double _positionTransitionDuration = 0.9;
+	double _positionTransitionTimer = _positionTransitionDuration + 1.0;
 
+	double _desiredZoom = 0.0;
+	double _desiredZoomLater = 0.0;
+	double _startZoom = 0.0;
+	double _zoomTransitionDuration = 0.9;
+	double _zoomTransitionTimer = _zoomTransitionDuration + 1.0;
+
+	// Common
+	bool _manualSetIterations = false;
+	
 	// Julia
 	int _juliaStateInt = static_cast<int>(JuliaState::None);
 	sf::Vector2f _juliaC;
@@ -89,11 +107,11 @@ private:
 	FractalGenerationPrecision _precision = FractalGenerationPrecision::Bit64;
 
 	// High precision transform
-	FractalSet::Position _cameraPosition;
-	FractalSet::Position _cameraZoom = {1.0, 1.0};
+	Position _cameraPosition;
+	Position _cameraZoom = {1.0, 1.0};
 	Transform<double> _cameraZoomTransform;
 	Transform<double> _cameraPositionTransform;
 	Transform<double> _cameraTransform;
-	FractalSet::Position _viewportSize;
+	Position _viewportSize;
 };
 }

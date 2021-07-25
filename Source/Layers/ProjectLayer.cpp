@@ -6,6 +6,7 @@ void ProjectLayer::OnAttach(Shared<Batch>& loader)
 {
 	BaseLayer::OnAttach(loader);
 
+	_paletteManager = CreateUnique<PaletteManager>();
 	_fractalManager = CreateShared<FractalManager>(_scene.ViewportPane().ViewportSize());
 
 	_camera.ApplyZoom(200.0f);
@@ -25,7 +26,8 @@ void ProjectLayer::OnDetach()
 void ProjectLayer::OnUpdate()
 {
 	BaseLayer::OnUpdate();
-
+	
+	_paletteManager->OnUpdate();
 	_fractalManager->OnUpdate(_scene);
 	_fractalManager->OnRender(_scene);
 }

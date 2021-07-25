@@ -7,7 +7,6 @@ namespace Se
 FractalManager::FractalManager(const sf::Vector2f& renderSize) :
 	_lastViewport(VecUtils::Null<double>(), VecUtils::Null<double>()),
 	_paletteComboBoxNames({"Fiery", "Fiery Alt", "UV", "Greyscale", "Rainbow"}),
-	_computeHostComboBoxNames({"CPU", "GPU Compute Shader", "GPU Pixel Shader"}),
 	_precisionComboBoxNames({"32-bit", "64-bit"}),
 	_fractalSetGenerationTypeNames({"Automatic", "Delayed", "Manual"})
 {
@@ -15,14 +14,14 @@ FractalManager::FractalManager(const sf::Vector2f& renderSize) :
 	_fractalSets.emplace_back(CreateUnique<Julia>(renderSize));
 	_fractalSets.emplace_back(CreateUnique<Buddhabrot>(renderSize));
 
-	_activeFractalSet = FractalSetType::Mandelbrot;
+	_activeFractalSetType = FractalSetType::Mandelbrot;
 
 	for (const auto& fractalSet : _fractalSets)
 	{
 		_fractalSetComboBoxNames.push_back(fractalSet->Name().c_str());
 	}
 
-	_computeHostInt = static_cast<int>(ActiveFractalSet().ComputeHost());
+	_hostInt = static_cast<int>(ActiveFractalSet().ActiveHostType());
 
 	const auto factor = 200.0;
 	_cameraZoom *= factor;
@@ -33,16 +32,73 @@ FractalManager::FractalManager(const sf::Vector2f& renderSize) :
 
 void FractalManager::OnUpdate(Scene& scene)
 {
-	UpdateHighPrecCamera();
 	scene.Camera().SetTransform(static_cast<sf::Transform>(_cameraTransform));
+	scene.Camera().SetZoom(_cameraZoom.x);
+	scene.Camera().SetCenter(sf::Vector2f(_cameraPosition.x, _cameraPosition.y));
+
+	if (!_manualSetIterations)
+	{
+		const auto iterations = std::min(2000ull, static_cast<ulong>(std::pow(_cameraZoom.x, 0.5)) + 20);
+		SetComputeIterationCount(iterations);
+	}
+
+	bool autoMove = false;
+	if (_zoomTransitionTimer <= _zoomTransitionDuration)
+	{
+		autoMove = true;
+		const auto delta = (std::sin(_zoomTransitionTimer / _zoomTransitionDuration * PI<double> - PI<double> / 2.0) +
+			1.0) / 2.0;
+
+		const auto zoom = _startZoom + delta * (_desiredZoom - _startZoom);
+		_cameraZoom = Position{zoom, zoom};
+		_cameraZoomTransform = Transform<double>().Scale(_cameraZoom);
+		_zoomTransitionTimer += Global::Clock::FrameTime().asSeconds();
+
+		if (_zoomTransitionTimer > _zoomTransitionDuration)
+		{
+			_cameraZoom = Position{_desiredZoom, _desiredZoom};
+		}
+	}
+	else if (_positionTransitionTimer <= _positionTransitionDuration)
+	{
+		autoMove = true;
+		const auto delta = (std::sin(
+			_positionTransitionTimer / _positionTransitionDuration * PI<double> - PI<double> / 2.0) + 1.0) / 2.0;
+
+		_cameraPosition = _startPos + delta * (_desiredCameraPos - _startPos);
+		_cameraPositionTransform = Transform<double>().Translate(_cameraPosition);
+		_positionTransitionTimer += Global::Clock::FrameTime().asSeconds();
+
+		if (_positionTransitionTimer > _positionTransitionDuration)
+		{
+			_cameraPosition = _desiredCameraPos;
+			_zoomTransitionTimer = 0.0;
+			_desiredZoom = _desiredZoomLater;
+			_startZoom = _cameraZoom.x;
+		}
+	}
+
+	if (autoMove)
+	{
+		UpdateTransform();
+	}
+	else
+	{
+		UpdateHighPrecCamera();
+	}
+
 
 	if (scene.ViewportPane().ViewportSize().x < 200 || scene.ViewportPane().ViewportSize().y < 200) return;
 
-	const FractalSet::SimBox sbViewport = GenerateSimBox(scene.Camera());
+	const SimBox sbViewport = GenerateSimBox(scene.Camera());
 	if (_lastViewport != sbViewport)
 	{
 		_lastViewport = sbViewport;
-		ActiveFractalSet().SetSimBox(_lastViewport);
+
+		for (auto& fractalSet : _fractalSets)
+		{
+			fractalSet->SetSimBox(_lastViewport);
+		}
 
 		if (ActiveGenerationType() != FractalSetGenerationType::ManualGeneration)
 		{
@@ -57,13 +113,15 @@ void FractalManager::OnRender(Scene& scene)
 {
 	if (scene.ViewportPane().ViewportSize().x < 200 || scene.ViewportPane().ViewportSize().y < 200) return;
 
+	PaletteManager::Instance().UploadTexture();
+
 	ActiveFractalSet().OnRender(scene);
 	_viewportMousePosition = scene.ViewportPane().MousePosition();
 }
 
 void FractalManager::OnGuiRender()
 {
-	Gui::BeginPropertyGrid();
+	Gui::BeginPropertyGrid("Overview");
 	ImGui::Text("Fractal Set");
 	ImGui::NextColumn();
 	ImGui::PushItemWidth(-1);
@@ -79,34 +137,42 @@ void FractalManager::OnGuiRender()
 	ImGui::NextColumn();
 	ImGui::PushItemWidth(-1);
 
+	_hostNamesCache.clear();
+	_hostTypeCache.clear();
+	const auto& hosts = ActiveFractalSet().Hosts();
 
-	if (ImGui::Combo("##Host", &_computeHostInt, _computeHostComboBoxNames.data(), _computeHostComboBoxNames.size()))
+	const auto activeHostType = ActiveFractalSet().ActiveHostType();
 	{
-		SetComputeHost(static_cast<FractalSetComputeHost>(_computeHostInt));
+		int index = 0;
+		for (const auto& [type, host] : hosts)
+		{
+			_hostNamesCache.push_back(host->Name().c_str());
+			_hostTypeCache.push_back(type);
+			if (type == activeHostType)
+			{
+				_hostInt = index;
+			}
+			index++;
+		}
 	}
 
-	ImGui::NextColumn();
-
-	ImGui::Text("Precision");
-	ImGui::NextColumn();
-	ImGui::PushItemWidth(-1);
-	if (ImGui::Combo("##Precision", &_activePrecisionInt, _precisionComboBoxNames.data(),
-	                 _precisionComboBoxNames.size()))
+	if (ImGui::Combo("##Host", &_hostInt, _hostNamesCache.data(), _hostNamesCache.size()))
 	{
-		SetPrecision(static_cast<FractalGenerationPrecision>(_activePrecisionInt));
+		SetHost(_hostTypeCache[_hostInt]);
 	}
+
 	ImGui::NextColumn();
 
 	ImGui::Text("Generation");
 	ImGui::NextColumn();
 	ImGui::PushItemWidth(-1);
-	if (ImGui::Combo("##Generation", &_activeFractalSetGenerationTypeInt, _fractalSetGenerationTypeNames.data(),
+	if (ImGui::Combo("##Generation", &_fractalSetGenerationTypeInt, _fractalSetGenerationTypeNames.data(),
 	                 _fractalSetGenerationTypeNames.size()))
 	{
-		SetGenerationType(static_cast<FractalSetGenerationType>(_activeFractalSetGenerationTypeInt));
+		SetGenerationType(static_cast<FractalSetGenerationType>(_fractalSetGenerationTypeInt));
 	}
 
-	switch (static_cast<FractalSetGenerationType>(_activeFractalSetGenerationTypeInt))
+	switch (static_cast<FractalSetGenerationType>(_fractalSetGenerationTypeInt))
 	{
 	case FractalSetGenerationType::ManualGeneration:
 	{
@@ -118,6 +184,8 @@ void FractalManager::OnGuiRender()
 		}
 		break;
 	}
+	case FractalSetGenerationType::AutomaticGeneration: break;
+	case FractalSetGenerationType::DelayedGeneration: break;
 	}
 
 	Gui::EndPropertyGrid();
@@ -130,41 +198,134 @@ void FractalManager::OnGuiRender()
 	ImGui::PushItemWidth(-1);
 	if (ImGui::Combo("##Palette", &_activePaletteInt, _paletteComboBoxNames.data(), _paletteComboBoxNames.size()))
 	{
-		SetPalette(static_cast<FractalSetPalette>(_activePaletteInt));
+		SetPalette(static_cast<PaletteType>(_activePaletteInt));
 	}
 	ImGui::NextColumn();
 	Gui::EndPropertyGrid();
 	ImGui::Dummy({1.0f, 2.0f});
-	Gui::Image(ActiveFractalSet().PaletteTexture(), sf::Vector2f(ImGui::GetContentRegionAvailWidth(), 9.0f));
+	Gui::Image(PaletteManager::Instance().Texture(), sf::Vector2f(ImGui::GetContentRegionAvailWidth(), 9.0f));
 
 	ImGui::Separator();
 
-	Gui::BeginPropertyGrid();
+	Gui::BeginPropertyGrid("Common settings");
+
+	ImGui::Text("Manual Iterations");
+	ImGui::NextColumn();
+	if (ImGui::Checkbox("##AutoSetIterations", &_manualSetIterations))
+	{
+		if (_manualSetIterations)
+		{
+			SetComputeIterationCount(_computeIterations);
+		}
+	}
+	ImGui::PushItemWidth(-1);
+	if (_manualSetIterations)
+	{
+		ImGui::SameLine();
+		if (ImGui::SliderInt("##SliderIterations", &_computeIterations, 10, 2000, "%d", ImGuiSliderFlags_Logarithmic))
+		{
+			SetComputeIterationCount(_computeIterations);
+		}
+	}
+	ImGui::NextColumn();
+
+	ImGui::Text("Zoom");
+	ImGui::NextColumn();
+	ImGui::PushItemWidth(-1);
+	_zoom = _cameraZoom.x;
+	if (ImGui::DragScalar("##Zoom", ImGuiDataType_U64, &_zoom, 7))
+	{
+		_cameraZoom = Position(_zoom, _zoom);
+		_cameraPositionTransform = Transform<double>().Scale(_cameraZoom);
+	}
+
+	ImGui::NextColumn();
+
+	ImGui::Text("R");
+	ImGui::SameLine();
+	ImGui::PushItemWidth(-1);
+	if (ImGui::DragScalar("##PosR", ImGuiDataType_Double, &_cameraPosition.x,
+	                      1.0 / (static_cast<double>(_zoom) / 10.0)))
+	{
+		_cameraPositionTransform = Transform<double>().Scale(_cameraPosition);
+	}
+	ImGui::NextColumn();
+	ImGui::Text("I");
+	ImGui::SameLine();
+	ImGui::PushItemWidth(-1);
+	if (ImGui::DragScalar("##PosI", ImGuiDataType_Double, &_cameraPosition.y,
+	                      1.0 / (static_cast<double>(_zoom) / 10.0)))
+	{
+		_cameraPositionTransform = Transform<double>().Scale(_cameraPosition);
+	}
+	ImGui::NextColumn();
+
+	Gui::EndPropertyGrid();
+
+	ImGui::Separator();
+
+	bool anyAdd = true;
+
+	// Draw options
+
+	Gui::BeginPropertyGrid("DrawOptions");
 
 	if (Gui::Property("Axis", _axis))
 	{
 		SetAxisState(_axis);
 	}
 
-	if (Gui::Property("Iterations", _computeIterations, 10, 2000, 1, GuiPropertyFlag_Slider | GuiPropertyFlag_Logarithmic))
-	{
-		SetComputeIterationCount(_computeIterations);
-	}
-
 	Gui::EndPropertyGrid();
 
-	ImGui::Separator();
-
-	switch (_activeFractalSet)
+	switch (_activeFractalSetType)
 	{
 	case FractalSetType::Mandelbrot:
 	{
-		Gui::BeginPropertyGrid();
-		if (Gui::Property("Complex lines", _complexLines))
+		Gui::BeginPropertyGrid("DrawOptions");
+		if (Gui::Property("Complex lines", _mandelbrotDrawComplexLines))
 		{
-			SetMandelbrotState(_complexLines ? Mandelbrot::State::ComplexLines : Mandelbrot::State::None);
+			_mandelbrotDrawComplexLines
+				? AddMandelbrotDrawFlags(MandelbrotDrawFlags_ComplexLines)
+				: RemoveMandelbrotDrawFlags(MandelbrotDrawFlags_ComplexLines);
 		}
 		Gui::EndPropertyGrid();
+		break;
+	}
+	case FractalSetType::Julia:
+	{
+		Gui::BeginPropertyGrid("DrawOptions");
+
+		if (Gui::Property("Draw C-dot", _juliaDrawCDot))
+		{
+			_juliaDrawCDot ? AddJuliaDrawFlags(JuliaDrawFlags_Dot) : RemoveJuliaDrawFlags(JuliaDrawFlags_Dot);
+		}
+
+		if (Gui::Property("Complex lines", _juliaDrawComplexLines))
+		{
+			_juliaDrawComplexLines
+				? AddJuliaDrawFlags(JuliaDrawFlags_ComplexLines)
+				: RemoveJuliaDrawFlags(JuliaDrawFlags_ComplexLines);
+		}
+		Gui::EndPropertyGrid();
+		break;
+	}
+	case FractalSetType::Buddhabrot:
+	{
+		break;
+	}
+	}
+
+	if (anyAdd) ImGui::Separator();
+
+	anyAdd = true;
+
+	// Fractal set specific control gui
+
+	switch (_activeFractalSetType)
+	{
+	case FractalSetType::Mandelbrot:
+	{
+		anyAdd = false;
 		break;
 	}
 	case FractalSetType::Julia:
@@ -175,64 +336,113 @@ void FractalManager::OnGuiRender()
 
 		_juliaC.x = julia.C().real();
 		_juliaC.y = julia.C().imag();
-		ImGui::Text("R: ");
+		ImGui::Text("R");
 		ImGui::SameLine();
 		ImGui::PushItemWidth(-1);
+		const sf::Vector2f lastJuliaC = _juliaC;
 		if (ImGui::SliderFloat("##R", &_juliaC.x, -6.0f, 6.0f))
 		{
-			SetJuliaCR(_juliaC.x);
+			const auto animate = std::abs(_juliaC.x - lastJuliaC.x) > 1.0f;
+			SetJuliaCr(_juliaC.x, animate);
 		}
 		ImGui::NextColumn();
-		ImGui::Text("I: ");
+		ImGui::Text("I");
 		ImGui::SameLine();
 		ImGui::PushItemWidth(-1);
 		if (ImGui::SliderFloat("##I", &_juliaC.y, -6.0f, 6.0f))
 		{
-			SetJuliaCI(_juliaC.y);
+			const auto animate = std::abs(_juliaC.y - lastJuliaC.x) > 1.0f;
+			SetJuliaCi(_juliaC.y, animate);
 		}
 		ImGui::NextColumn();
 
 		ImGui::Text("Mode");
 		ImGui::NextColumn();
-		if (ImGui::RadioButton("None", &_juliaStateInt, static_cast<int>(JuliaState::None)) || ImGui::RadioButton(
-			"Animate", &_juliaStateInt, static_cast<int>(JuliaState::Animate)) || ImGui::RadioButton(
-			"Follow Cursor", &_juliaStateInt, static_cast<int>(JuliaState::FollowCursor)))
+
+
+		if (ImGui::RadioButton("None", &_juliaStateInt, static_cast<int>(JuliaState::None)))
 		{
 			SetJuliaState(static_cast<JuliaState>(_juliaStateInt));
 		}
+
+		if (ImGui::RadioButton("Animate", &_juliaStateInt, static_cast<int>(JuliaState::Animate)))
+		{
+			SetJuliaState(static_cast<JuliaState>(_juliaStateInt));
+		}
+
+		if (_juliaStateInt == static_cast<int>(JuliaState::Animate))
+		{
+			const auto state = ActiveFractalSet().As<Julia>().Paused();
+			if (ImGui::Button(state ? "Resume" : "Pause", ImVec2(ImGui::GetContentRegionAvailWidth(), 0.0f)))
+			{
+				state ? ResumeJuliaAnimation() : PauseJuliaAnimation();
+			}
+		}
+
+		if (ImGui::RadioButton("Follow Cursor", &_juliaStateInt, static_cast<int>(JuliaState::FollowCursor)))
+		{
+			SetJuliaState(static_cast<JuliaState>(_juliaStateInt));
+		}
+
 		ImGui::NextColumn();
 
-		if (Gui::Property("Draw C-dot", _juliaDrawCDot))
-		{
-			_juliaDrawCDot ? AddJuliaDrawFlags(JuliaDrawFlags_Dot) : RemoveJuliaDrawFlag(JuliaDrawFlags_Dot);
-		}
 
 		Gui::EndPropertyGrid();
 		break;
 	}
 	case FractalSetType::Buddhabrot:
 	{
-		if (_fractalSets[static_cast<int>(FractalSetType::Buddhabrot)]->ComputeHost() !=
-			FractalSetComputeHost::GPUComputeShader)
+		if (_fractalSets[static_cast<int>(FractalSetType::Buddhabrot)]->ActiveHostType() != HostType::GpuComputeShader)
 		{
 			ImGui::Text("Buddhabrot can only be rendered using Compute shader!");
+		}
+		else
+		{
+			anyAdd = false;
 		}
 		break;
 	}
 	}
+
+	if (anyAdd) ImGui::Separator();
+
+
+	// Places
+	Gui::BeginPropertyGrid();
+
+	const auto& places = ActiveFractalSet().Places();
+	for (const auto& [name, position, zoom] : places)
+	{
+		ImGui::Text("%s", name.c_str());
+		ImGui::NextColumn();
+		if (ImGui::Button("Go to", ImVec2(ImGui::GetContentRegionAvailWidth(), 0.0f)))
+		{
+			_positionTransitionTimer = 0.0;
+			_desiredCameraPos = position;
+			_startPos = _cameraPosition;
+
+			_zoomTransitionTimer = 0.0;
+			_desiredZoom = 200.0;
+			_desiredZoomLater = zoom;
+			_startZoom = _cameraZoom.x;
+		}
+		ImGui::NextColumn();
+	}
+
+	Gui::EndPropertyGrid();
 }
 
 void FractalManager::OnViewportResize(const sf::Vector2f& size)
 {
-	_viewportSize = VecUtils::ConvertTo<FractalSet::Position>(size);
-	ResizeVertexArrays(size);
+	_viewportSize = VecUtils::ConvertTo<Position>(size);
+	Resize(size);
 	for (auto& fractalSet : _fractalSets)
 	{
 		fractalSet->OnViewportResize(size);
 	}
 }
 
-void FractalManager::ResizeVertexArrays(const sf::Vector2f& size)
+void FractalManager::Resize(const sf::Vector2f& size)
 {
 	for (const auto& set : _fractalSets)
 	{
@@ -242,9 +452,14 @@ void FractalManager::ResizeVertexArrays(const sf::Vector2f& size)
 
 void FractalManager::SetFractalSet(FractalSetType type)
 {
-	_activeFractalSet = type;
-	ActiveFractalSet().MarkForImageComputation();
-	ActiveFractalSet().MarkForImageRendering();
+	_activeFractalSetType = type;
+
+	auto& activeFractalSet = ActiveFractalSet();
+	activeFractalSet.MarkForImageComputation();
+	activeFractalSet.MarkForImageRendering();
+
+	_fractalSetGenerationTypeInt = static_cast<int>(ActiveFractalSet().GenerationType());
+
 	// Nullify the viewport cache to force a new viewport to be computed
 	_lastViewport = {VecUtils::Null<double>(), VecUtils::Null<double>()};
 }
@@ -262,42 +477,39 @@ void FractalManager::SetComputeIterationCount(size_t iterations)
 	}
 }
 
-void FractalManager::SetComputeHost(FractalSetComputeHost computeHost)
+void FractalManager::SetHost(HostType computeHost)
 {
-	for (const auto& fractalSet : _fractalSets)
-	{
-		fractalSet->SetComputeHost(computeHost);
-		fractalSet->MarkForImageComputation();
-		fractalSet->MarkForImageRendering();
-	}
+	ActiveFractalSet().SetHostType(computeHost);
+	ActiveFractalSet().MarkForImageComputation();
+	ActiveFractalSet().MarkForImageRendering();
 }
 
-void FractalManager::SetJuliaC(const Complex<double>& c)
+void FractalManager::SetJuliaC(const std::complex<double>& c)
 {
 	auto& juliaSet = ActiveFractalSet().As<Julia>();
 	juliaSet.SetC(c, true);
 	juliaSet.MarkForImageRendering();
 }
 
-void FractalManager::SetJuliaCR(double r)
+void FractalManager::SetJuliaCr(double r, bool animate)
 {
 	auto& juliaSet = ActiveFractalSet().As<Julia>();
-	juliaSet.SetCR(r, false);
+	juliaSet.SetCr(r, animate);
 	juliaSet.MarkForImageRendering();
 }
 
-void FractalManager::SetJuliaCI(double i)
+void FractalManager::SetJuliaCi(double i, bool animate)
 {
 	auto& juliaSet = ActiveFractalSet().As<Julia>();
-	juliaSet.SetCI(i, false);
+	juliaSet.SetCi(i, animate);
 	juliaSet.MarkForImageRendering();
 }
 
-void FractalManager::SetPalette(FractalSetPalette palette)
+void FractalManager::SetPalette(PaletteType palette)
 {
+	PaletteManager::Instance().SetActive(palette);
 	for (auto& fractalSet : _fractalSets)
 	{
-		fractalSet->SetPalette(palette);
 		fractalSet->MarkForImageRendering();
 	}
 }
@@ -307,10 +519,16 @@ void FractalManager::SetGenerationType(FractalSetGenerationType type)
 	ActiveFractalSet().SetGenerationType(type);
 }
 
-void FractalManager::SetMandelbrotState(Mandelbrot::State state)
+void FractalManager::AddMandelbrotDrawFlags(MandelbrotDrawFlags flags)
 {
 	auto& mandelbrotSet = ActiveFractalSet().As<Mandelbrot>();
-	mandelbrotSet.SetState(state);
+	mandelbrotSet.SetDrawFlags(mandelbrotSet.DrawFlags() | flags);
+}
+
+void FractalManager::RemoveMandelbrotDrawFlags(MandelbrotDrawFlags flags)
+{
+	auto& mandelbrotSet = ActiveFractalSet().As<Mandelbrot>();
+	mandelbrotSet.SetDrawFlags(mandelbrotSet.DrawFlags() & ~flags);
 }
 
 void FractalManager::SetJuliaState(JuliaState state)
@@ -325,7 +543,7 @@ void FractalManager::AddJuliaDrawFlags(JuliaDrawFlags flags)
 	juliaSet.SetDrawFlags(juliaSet.DrawFlags() | flags);
 }
 
-void FractalManager::RemoveJuliaDrawFlag(JuliaDrawFlags flags)
+void FractalManager::RemoveJuliaDrawFlags(JuliaDrawFlags flags)
 {
 	auto& juliaSet = ActiveFractalSet().As<Julia>();
 	juliaSet.SetDrawFlags(juliaSet.DrawFlags() & ~flags);
@@ -348,7 +566,20 @@ void FractalManager::SetAxisState(bool state)
 
 void FractalManager::SetPrecision(FractalGenerationPrecision precision)
 {
+	// It is POSSIBLE to use 32-bit floating point precision.
+	// But it was removed from Gui, since it cluttered more than
+	// it provided
 	_precision = precision;
+}
+
+void FractalManager::PauseJuliaAnimation()
+{
+	ActiveFractalSet().As<Julia>().PauseAnimation();
+}
+
+void FractalManager::ResumeJuliaAnimation()
+{
+	ActiveFractalSet().As<Julia>().ResumeAnimation();
 }
 
 void FractalManager::MarkForImageComputation()
@@ -365,7 +596,7 @@ void FractalManager::UpdateHighPrecCamera()
 {
 	if (Mouse::IsDown(sf::Mouse::Button::Left) && Mouse::IsDown(sf::Mouse::Button::Right))
 	{
-		auto delta = VecUtils::ConvertTo<FractalSet::Position>(Mouse::Swipe());
+		auto delta = VecUtils::ConvertTo<Position>(Mouse::Swipe());
 		if (VecUtils::LengthSq(delta) > 0.0)
 		{
 			delta = _cameraZoomTransform.Inverse().TransformPoint(delta);
@@ -406,30 +637,26 @@ void FractalManager::UpdateTransform()
 	_cameraTransform.Translate(-_cameraPosition);
 }
 
-auto FractalManager::GenerateSimBox(const Camera& camera) -> FractalSet::SimBox
+auto FractalManager::GenerateSimBox(const Camera& camera) const -> SimBox
 {
 	switch (_precision)
 	{
 	case FractalGenerationPrecision::Bit32:
 	{
 		const auto& [topLeft, botRight] = camera.Viewport();
-		return FractalSet::SimBox{
-			FractalSet::Position(topLeft.x, topLeft.y), FractalSet::Position(botRight.x, botRight.y)
-		};
+		return SimBox{Position(topLeft.x, topLeft.y), Position(botRight.x, botRight.y)};
 	}
 	case FractalGenerationPrecision::Bit64:
 	{
 		const auto vpSize = _viewportSize;
 		const sf::Rect<double> screenRect = {{0.0, 0.0}, {vpSize.x, vpSize.y}};
-		const auto TL = FractalSet::Position(screenRect.left, screenRect.top);
-		const auto BR = FractalSet::Position(screenRect.left + screenRect.width, screenRect.top + screenRect.height);
+		const auto TL = Position(screenRect.left, screenRect.top);
+		const auto BR = Position(screenRect.left + screenRect.width, screenRect.top + screenRect.height);
 		const auto inv = _cameraTransform.Inverse();
 
 		const auto [topLeft, topRight] = CreatePair(inv.TransformPoint(TL), inv.TransformPoint(BR));
 
-		return FractalSet::SimBox{
-			FractalSet::Position(topLeft.x, topLeft.y), FractalSet::Position(topRight.x, topRight.y)
-		};
+		return SimBox{Position(topLeft.x, topLeft.y), Position(topRight.x, topRight.y)};
 	}
 	}
 
@@ -439,7 +666,7 @@ auto FractalManager::GenerateSimBox(const Camera& camera) -> FractalSet::SimBox
 
 auto FractalManager::ActiveFractalSet() -> FractalSet&
 {
-	return *_fractalSets[static_cast<int>(_activeFractalSet)];
+	return *_fractalSets[static_cast<int>(_activeFractalSetType)];
 }
 
 auto FractalManager::ActiveFractalSet() const -> const FractalSet&

@@ -5,21 +5,34 @@
 namespace Se
 {
 Julia::Julia(const sf::Vector2f& renderSize) :
-	FractalSet("Julia", FractalSetType::Julia, renderSize),
-	_computeCS(ComputeShaderStore::Get("julia.comp")),
-	_pixelShader(ShaderStore::Get("julia.frag", sf::Shader::Fragment)),
-	_state(JuliaState::None),
-	_desiredC(0.0, 0.0),
-	_currentC(0.0, 0.0),
-	_startC(0.0, 0.0),
-	_animationTimer(0.0f),
-	_cTransitionTimer(0.0f),
-	_cTransitionDuration(0.5f)
+	FractalSet("Julia", FractalSetType::Julia, renderSize)
 {
+	const auto x = renderSize.x, y = renderSize.y;
+
+	auto cpuHost = CreateUnique<CpuHost>(x, y);
+	auto comHost = CreateUnique<ComputeShaderHost>("julia.comp", x, y, sf::Vector2u(x, y));
+	auto pixHost = CreateUnique<PixelShaderHost>("julia.frag", x, y);
+
 	for (int i = 0; i < 32; i++)
 	{
-		AddWorker(new JuliaWorker);
+		cpuHost->AddWorker(CreateUnique<JuliaWorker>());
 	}
+
+	comHost->RequestUniformUpdate += [this](ComputeShader& shader)
+	{
+		UpdateComputeShaderUniforms(shader);
+		return false;
+	};
+
+	pixHost->RequestUniformUpdate += [this](sf::Shader& shader)
+	{
+		UpdatePixelShaderUniforms(shader);
+		return false;
+	};
+
+	AddHost(HostType::Cpu, Move(cpuHost));
+	AddHost(HostType::GpuComputeShader, Move(comHost));
+	AddHost(HostType::GpuPixelShader, Move(pixHost));
 }
 
 void Julia::OnUpdate(Scene& scene)
@@ -28,9 +41,14 @@ void Julia::OnUpdate(Scene& scene)
 	{
 	case JuliaState::Animate:
 	{
+		if (_animPaused)
+		{
+			break;
+		}
+
 		const double x = 0.7885 * std::cos(_animationTimer);
 		const double y = 0.7885 * std::sin(_animationTimer);
-		SetC(Complex<double>(x, y), false);
+		SetC(std::complex(x, y), false);
 		_animationTimer += Global::Clock::FrameTime().asSeconds() / 2.0f;
 		if (_animationTimer > 2.0f * PI<>)
 		{
@@ -43,7 +61,7 @@ void Julia::OnUpdate(Scene& scene)
 		if (scene.ViewportPane().Hovered() && !Keyboard::IsDown(sf::Keyboard::Key::LControl))
 		{
 			const auto mousePos = scene.Camera().ScreenToWorld(scene.ViewportPane().MousePosition());
-			SetC(Complex<double>(mousePos.x, mousePos.y), false);
+			SetC(std::complex<double>(mousePos.x, mousePos.y), false);
 		}
 		break;
 	}
@@ -67,10 +85,13 @@ void Julia::OnUpdate(Scene& scene)
 		_currentC = _desiredC;
 	}
 
-	for (auto& worker : _workers)
+	if (_activeHost == HostType::Cpu)
 	{
-		auto* juliaWorker = dynamic_cast<JuliaWorker*>(worker);
-		juliaWorker->C = _currentC;
+		for (auto& worker : ActiveHost().As<CpuHost>().Workers())
+		{
+			auto& juliaWorker = dynamic_cast<JuliaWorker&>(*worker);
+			juliaWorker.C = _currentC;
+		}
 	}
 
 	FractalSet::OnUpdate(scene);
@@ -86,7 +107,7 @@ void Julia::OnRender(Scene& scene)
 		const float adjustedRadius = 10.0f / scene.Camera().Zoom();
 		const float adjustedThickness = 3.0f / scene.Camera().Zoom();
 		const sf::Vector2f position(_currentC.real(), _currentC.imag());
-		
+
 		circle.setPosition(position - sf::Vector2f(adjustedRadius, adjustedRadius));
 		circle.setFillColor(sf::Color(200, 50, 50));
 		circle.setOutlineColor(sf::Color(100, 100, 100));
@@ -94,9 +115,44 @@ void Julia::OnRender(Scene& scene)
 		circle.setRadius(adjustedRadius);
 		scene.Submit(circle);
 	}
+
+	if (_drawFlags & JuliaDrawFlags_ComplexLines)
+	{
+		const sf::Vector2f start = scene.Camera().ScreenToWorld(scene.ViewportPane().MousePosition());
+		sf::Vector2f to = start;
+		for (int i = 1; i < _computeIterations; i++)
+		{
+			sf::Vector2f from = TranslatePoint(start, i);
+			scene.Submit(from, to, sf::Color(200, 200, 200, 60));
+			to = from;
+			scene.Submit(to, sf::Color(255, 255, 255, 150), 5.0f);
+		}
+	}
 }
 
-auto Julia::C() const noexcept -> const Complex<double>&
+void Julia::OnViewportResize(const sf::Vector2f& size)
+{
+	FractalSet::OnViewportResize(size);
+	const auto sizeU = VecUtils::ConvertTo<sf::Vector2u>(size);
+	_hosts.at(HostType::GpuComputeShader)->As<ComputeShaderHost>().SetDimensions(sizeU);
+}
+
+void Julia::ResumeAnimation()
+{
+	_animPaused = false;
+}
+
+void Julia::PauseAnimation()
+{
+	_animPaused = true;
+}
+
+auto Julia::Paused() const -> bool
+{
+	return _animPaused;
+}
+
+auto Julia::C() const noexcept -> const std::complex<double>&
 {
 	return _desiredC;
 }
@@ -116,17 +172,30 @@ void Julia::SetDrawFlags(JuliaDrawFlags flags)
 	_drawFlags = flags;
 }
 
-void Julia::SetCR(double r, bool animate)
+void Julia::SetCr(double r, bool animate)
 {
-	SetC(Complex<double>(r, C().imag()), animate);
+	SetC(std::complex(r, C().imag()), animate);
 }
 
-void Julia::SetCI(double i, bool animate)
+void Julia::SetCi(double i, bool animate)
 {
-	SetC(Complex<double>(C().real(), i), animate);
+	SetC(std::complex(C().real(), i), animate);
 }
 
-void Julia::SetC(const Complex<double>& c, bool animate)
+auto Julia::TranslatePoint(const sf::Vector2f& point, int iterations) -> sf::Vector2f
+{
+	const std::complex<double> c = _currentC;
+	std::complex<double> z(point.x, point.y);
+
+	for (int n = 0; n < iterations && abs(z) < 2.0; n++)
+	{
+		z = (z * z) + c;
+	}
+
+	return sf::Vector2f(z.real(), z.imag());
+}
+
+void Julia::SetC(const std::complex<double>& c, bool animate)
 {
 	if (animate && abs(c - _desiredC) > 0.1)
 	{
@@ -142,37 +211,27 @@ void Julia::SetC(const Complex<double>& c, bool animate)
 	_desiredC = c;
 }
 
-auto Julia::ComputeShader() -> Shared<class ComputeShader>
-{
-	return _computeCS;
-}
-
-void Julia::UpdateComputeShaderUniforms()
+void Julia::UpdateComputeShaderUniforms(ComputeShader& shader)
 {
 	const double xScale = (_simBox.BottomRight.x - _simBox.TopLeft.x) / static_cast<double>(_simWidth);
 	const double yScale = (_simBox.BottomRight.y - _simBox.TopLeft.y) / static_cast<double>(_simHeight);
-	_computeCS->SetVector2d("juliaC", _currentC);
-	_computeCS->SetVector2d("fractalTL", _simBox.TopLeft);
-	_computeCS->SetDouble("xScale", xScale);
-	_computeCS->SetDouble("yScale", yScale);
-	_computeCS->SetInt("iterations", _computeIterations);
+	shader.SetVector2d("juliaC", _currentC);
+	shader.SetVector2d("fractalTL", _simBox.TopLeft);
+	shader.SetDouble("xScale", xScale);
+	shader.SetDouble("yScale", yScale);
+	shader.SetInt("iterations", _computeIterations);
 }
 
-auto Julia::PixelShader() -> Shared<sf::Shader>
-{
-	return _pixelShader;
-}
-
-void Julia::UpdatePixelShaderUniforms()
+void Julia::UpdatePixelShaderUniforms(sf::Shader& shader)
 {
 	const double xScale = (_simBox.BottomRight.x - _simBox.TopLeft.x) / static_cast<double>(_simWidth);
 	const double yScale = (_simBox.BottomRight.y - _simBox.TopLeft.y) / static_cast<double>(_simHeight);
 
-	SetUniform(_pixelShader->getNativeHandle(), "juliaC", sf::Vector2<double>(_currentC.real(), _currentC.imag()));
-	SetUniform(_pixelShader->getNativeHandle(), "fractalTL", _simBox.TopLeft);
-	SetUniform(_pixelShader->getNativeHandle(), "xScale", xScale);
-	SetUniform(_pixelShader->getNativeHandle(), "yScale", yScale);
-	SetUniform(_pixelShader->getNativeHandle(), "iterations", static_cast<int>(_computeIterations));
+	SetUniform(shader.getNativeHandle(), "juliaC", sf::Vector2(_currentC.real(), _currentC.imag()));
+	SetUniform(shader.getNativeHandle(), "fractalTL", _simBox.TopLeft);
+	SetUniform(shader.getNativeHandle(), "xScale", xScale);
+	SetUniform(shader.getNativeHandle(), "yScale", yScale);
+	SetUniform(shader.getNativeHandle(), "iterations", static_cast<int>(_computeIterations));
 }
 
 void Julia::JuliaWorker::Compute()

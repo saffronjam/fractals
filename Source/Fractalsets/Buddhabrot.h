@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "FractalSet.h"
+#include "ComputeHosts/CpuHost.h"
 
 namespace Se
 {
@@ -16,15 +17,9 @@ public:
 	static auto TranslatePoint(const sf::Vector2f& point, int iterations) -> sf::Vector2f;
 
 private:
-	auto ComputeShader() -> Shared<class ComputeShader> override;
-	void UpdateComputeShaderUniforms() override;
-	sf::Vector2u ComputeShaderWorkerDim() override;
-
-	auto PixelShader() -> Shared<sf::Shader> override;
-	void UpdatePixelShaderUniforms() override;
+	void UpdateComputeShaderUniforms(ComputeShader& shader);
 
 private:
-	Shared<class ComputeShader> _computeCS;
 	uint _ssbo;
 
 	float _pointCoverage = 50.0f;
@@ -33,7 +28,6 @@ private:
 private:
 	struct BuddhabrotWorker : Worker
 	{
-		~BuddhabrotWorker() override = default;
 		void Compute() override;
 	};
 };

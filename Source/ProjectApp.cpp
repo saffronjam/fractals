@@ -5,7 +5,7 @@ namespace Se
 {
 auto CreateApplication() -> Unique<App>
 {
-	return CreateUnique<ProjectApp>(AppProperties::CreateFullscreen("Fractals"));
+	return CreateUnique<ProjectApp>(AppProperties::CreateCentered("Fractals", 1000, 700));
 }
 
 ProjectApp::ProjectApp(const AppProperties& properties) :
