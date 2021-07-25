@@ -4,24 +4,60 @@
 
 #include <Saffron/Core/SIMD.h>
 
+#include "ComputeHosts/CpuHost.h"
+#include "ComputeHosts/ComputeShaderHost.h"
+#include "ComputeHosts/PixelShaderHost.h"
+
 namespace Se
 {
 Mandelbrot::Mandelbrot(const sf::Vector2f& renderSize) :
 	FractalSet("Mandelbrot", FractalSetType::Mandelbrot, renderSize),
-	_computeCS(ComputeShaderStore::Get("mandelbrot.comp")),
-	_pixelShader(ShaderStore::Get("mandelbrot.frag", sf::Shader::Fragment)),
-	_state(State::None)
+	_drawFlags(MandelbrotDrawFlags_None)
 {
+	const auto x = renderSize.x, y = renderSize.y;
+
+	auto cpuHost = CreateUnique<CpuHost>(x, y);
+	auto comHost = CreateUnique<ComputeShaderHost>("mandelbrot.comp", x, y, sf::Vector2u(x, y));
+	auto pixHost = CreateUnique<PixelShaderHost>("mandelbrot.frag", x, y);
+
 	for (int i = 0; i < 32; i++)
 	{
-		AddWorker(new MandelbrotWorker);
+		cpuHost->AddWorker(CreateUnique<MandelbrotWorker>());
 	}
+
+	comHost->RequestUniformUpdate += [this](ComputeShader& shader)
+	{
+		UpdateComputeShaderUniforms(shader);
+		return false;
+	};
+
+	pixHost->RequestUniformUpdate += [this](sf::Shader& shader)
+	{
+		UpdatePixelShaderUniforms(shader);
+		return false;
+	};
+
+	AddHost(HostType::Cpu, Move(cpuHost));
+	AddHost(HostType::GpuComputeShader, Move(comHost));
+	AddHost(HostType::GpuPixelShader, Move(pixHost));
+
+	_places.push_back({"Elephant Valley", {0.3, 0.0}, 700});
+}
+
+auto Mandelbrot::DrawFlags() const -> MandelbrotDrawFlags
+{
+	return _drawFlags;
+}
+
+void Mandelbrot::SetDrawFlags(MandelbrotDrawFlags state) noexcept
+{
+	_drawFlags = state;
 }
 
 auto Mandelbrot::TranslatePoint(const sf::Vector2f& point, int iterations) -> sf::Vector2f
 {
-	const Complex<double> c(point.x, point.y);
-	Complex<double> z(0.0, 0.0);
+	const std::complex<double> c(point.x, point.y);
+	std::complex z(0.0, 0.0);
 
 	for (int n = 0; n < iterations && abs(z) < 2.0; n++)
 	{
@@ -34,7 +70,8 @@ auto Mandelbrot::TranslatePoint(const sf::Vector2f& point, int iterations) -> sf
 void Mandelbrot::OnRender(Scene& scene)
 {
 	FractalSet::OnRender(scene);
-	if (_state == State::ComplexLines)
+
+	if (_drawFlags & MandelbrotDrawFlags_ComplexLines)
 	{
 		const sf::Vector2f start = scene.Camera().ScreenToWorld(scene.ViewportPane().MousePosition());
 		sf::Vector2f to = start;
@@ -48,44 +85,41 @@ void Mandelbrot::OnRender(Scene& scene)
 	}
 }
 
-auto Mandelbrot::ComputeShader() -> Shared<class ComputeShader>
+void Mandelbrot::OnViewportResize(const sf::Vector2f& size)
 {
-	return _computeCS;
+	FractalSet::OnViewportResize(size);
+	const auto sizeU = VecUtils::ConvertTo<sf::Vector2u>(size);
+	_hosts.at(HostType::GpuComputeShader)->As<ComputeShaderHost>().SetDimensions(sizeU);
 }
 
-void Mandelbrot::UpdateComputeShaderUniforms()
+void Mandelbrot::UpdateComputeShaderUniforms(ComputeShader& shader)
 {
 	const double xScale = (_simBox.BottomRight.x - _simBox.TopLeft.x) / static_cast<double>(_simWidth);
 	const double yScale = (_simBox.BottomRight.y - _simBox.TopLeft.y) / static_cast<double>(_simHeight);
-	_computeCS->SetVector2d("fractalTL", _simBox.TopLeft);
-	_computeCS->SetDouble("xScale", xScale);
-	_computeCS->SetDouble("yScale", yScale);
-	_computeCS->SetInt("iterations", _computeIterations);
+	shader.SetVector2d("fractalTL", _simBox.TopLeft);
+	shader.SetDouble("xScale", xScale);
+	shader.SetDouble("yScale", yScale);
+	shader.SetInt("iterations", _computeIterations);
 }
 
-auto Mandelbrot::PixelShader() -> Shared<sf::Shader>
-{
-	return _pixelShader;
-}
-
-void Mandelbrot::UpdatePixelShaderUniforms()
+void Mandelbrot::UpdatePixelShaderUniforms(sf::Shader& shader)
 {
 	const double xScale = (_simBox.BottomRight.x - _simBox.TopLeft.x) / static_cast<double>(_simWidth);
 	const double yScale = (_simBox.BottomRight.y - _simBox.TopLeft.y) / static_cast<double>(_simHeight);
 
-	SetUniform(_pixelShader->getNativeHandle(), "fractalTL", _simBox.TopLeft);
-	SetUniform(_pixelShader->getNativeHandle(), "xScale", xScale);
-	SetUniform(_pixelShader->getNativeHandle(), "yScale", yScale);
-	SetUniform(_pixelShader->getNativeHandle(), "iterations", static_cast<int>(_computeIterations));
+	SetUniform(shader.getNativeHandle(), "fractalTL", _simBox.TopLeft);
+	SetUniform(shader.getNativeHandle(), "xScale", xScale);
+	SetUniform(shader.getNativeHandle(), "yScale", yScale);
+	SetUniform(shader.getNativeHandle(), "iterations", static_cast<int>(_computeIterations));
 }
 
 void Mandelbrot::MandelbrotWorker::Compute()
 {
-	while (alive)
+	while (Alive)
 	{
 		std::unique_lock lm(Mutex);
 		CvStart.wait(lm);
-		if (!alive)
+		if (!Alive)
 		{
 			++(*WorkerComplete);
 			return;
@@ -96,59 +130,59 @@ void Mandelbrot::MandelbrotWorker::Compute()
 		double xScale = (FractalBR.x - FractalTL.x) / (ImageBR.x - ImageTL.x);
 		double yScale = (FractalBR.y - FractalTL.y) / (ImageBR.y - ImageTL.y);
 
-		double y_pos = FractalTL.y;
+		double yPos = FractalTL.y;
 
-		int y_offset = 0;
-		int row_size = SimWidth;
+		int yOffset = 0;
+		int rowSize = SimWidth;
 
 		int x, y;
 
-		SIMD_Double _a, _b, _two, _four, _mask1;
-		SIMD_Double _zr, _zi, _zr2, _zi2, _cr, _ci;
-		SIMD_Double _x_pos_offsets, _x_pos, _x_scale, _x_jump;
-		SIMD_Integer _one, _c, _n, _iterations, _mask2;
+		SIMD_Double a, b, two, four, mask1;
+		SIMD_Double zr, zi, zr2, zi2, cr, ci;
+		SIMD_Double xPosOffsets, xPos, xScaleSimd, xJump;
+		SIMD_Integer one, c, n, iterations, mask2;
 
-		_one = SIMD_SetOnei(1);
-		_two = SIMD_SetOne(2.0);
-		_four = SIMD_SetOne(4.0);
-		_iterations = SIMD_SetOnei(iterations);
+		one = SIMD_SetOnei(1);
+		two = SIMD_SetOne(2.0);
+		four = SIMD_SetOne(4.0);
+		iterations = SIMD_SetOnei(Iterations);
 
-		_x_scale = SIMD_SetOne(xScale);
-		_x_jump = SIMD_SetOne(xScale * 4.0);
-		_x_pos_offsets = SIMD_Set(0.0, 1.0, 2.0, 3.0);
-		_x_pos_offsets = SIMD_Mul(_x_pos_offsets, _x_scale);
+		xScaleSimd = SIMD_SetOne(xScale);
+		xJump = SIMD_SetOne(xScale * 4.0);
+		xPosOffsets = SIMD_Set(0.0, 1.0, 2.0, 3.0);
+		xPosOffsets = SIMD_Mul(xPosOffsets, xScaleSimd);
 
 		for (y = ImageTL.y; y < ImageBR.y; y++)
 		{
 			// Reset x_position
-			_a = SIMD_SetOne(FractalTL.x);
-			_x_pos = SIMD_Add(_a, _x_pos_offsets);
+			a = SIMD_SetOne(FractalTL.x);
+			xPos = SIMD_Add(a, xPosOffsets);
 
-			_ci = SIMD_SetOne(y_pos);
+			ci = SIMD_SetOne(yPos);
 
 			for (x = ImageTL.x; x < ImageBR.x; x += 4)
 			{
-				_cr = _x_pos;
-				_zr = SIMD_SetZero();
-				_zi = SIMD_SetZero();
-				_n = SIMD_SetZero256i();
+				cr = xPos;
+				zr = SIMD_SetZero();
+				zi = SIMD_SetZero();
+				n = SIMD_SetZero256i();
 
-			repeat: _zr2 = SIMD_Mul(_zr, _zr);
-				_zi2 = SIMD_Mul(_zi, _zi);
-				_a = SIMD_Sub(_zr2, _zi2);
-				_a = SIMD_Add(_a, _cr);
-				_b = SIMD_Mul(_zr, _zi);
-				_b = SIMD_Mul(_b, _two);
-				_b = SIMD_Add(_b, _ci);
-				_zr = _a;
-				_zi = _b;
-				_a = SIMD_Add(_zr2, _zi2);
-				_mask1 = SIMD_LessThan(_a, _four);
-				_mask2 = SIMD_GreaterThani(_iterations, _n);
-				_mask2 = SIMD_Andi(_mask2, SIMD_CastToInt(_mask1));
-				_c = SIMD_Andi(_one, _mask2); // Zero out ones where n < iterations
-				_n = SIMD_Addi(_n, _c); // n++ Increase all n
-				if (SIMD_SignMask(SIMD_CastToFloat(_mask2)) > 0) goto repeat;
+			repeat: zr2 = SIMD_Mul(zr, zr);
+				zi2 = SIMD_Mul(zi, zi);
+				a = SIMD_Sub(zr2, zi2);
+				a = SIMD_Add(a, cr);
+				b = SIMD_Mul(zr, zi);
+				b = SIMD_Mul(b, two);
+				b = SIMD_Add(b, ci);
+				zr = a;
+				zi = b;
+				a = SIMD_Add(zr2, zi2);
+				mask1 = SIMD_LessThan(a, four);
+				mask2 = SIMD_GreaterThani(iterations, n);
+				mask2 = SIMD_Andi(mask2, SIMD_CastToInt(mask1));
+				c = SIMD_Andi(one, mask2); // Zero out ones where n < iterations
+				n = SIMD_Addi(n, c); // n++ Increase all n
+				if (SIMD_SignMask(SIMD_CastToFloat(mask2)) > 0) goto repeat;
 
 #if defined(__MINGW32__)
 				fractalArray[y_offset + x + 0] = static_cast<int>(_n[3]);
@@ -156,18 +190,18 @@ void Mandelbrot::MandelbrotWorker::Compute()
 				fractalArray[y_offset + x + 2] = static_cast<int>(_n[1]);
 				fractalArray[y_offset + x + 3] = static_cast<int>(_n[0]);
 #elif defined (_MSC_VER)
-				FractalArray[y_offset + x + 0] = static_cast<int>(_n.m256i_i64[3]);
-				FractalArray[y_offset + x + 1] = static_cast<int>(_n.m256i_i64[2]);
-				FractalArray[y_offset + x + 2] = static_cast<int>(_n.m256i_i64[1]);
-				FractalArray[y_offset + x + 3] = static_cast<int>(_n.m256i_i64[0]);
+				FractalArray[yOffset + x + 0] = static_cast<int>(n.m256i_i64[3]);
+				FractalArray[yOffset + x + 1] = static_cast<int>(n.m256i_i64[2]);
+				FractalArray[yOffset + x + 2] = static_cast<int>(n.m256i_i64[1]);
+				FractalArray[yOffset + x + 3] = static_cast<int>(n.m256i_i64[0]);
 #endif
 
-				_x_pos = SIMD_Add(_x_pos, _x_jump);
+				xPos = SIMD_Add(xPos, xJump);
 			}
 
 
-			y_pos += yScale;
-			y_offset += row_size;
+			yPos += yScale;
+			yOffset += rowSize;
 		}
 		++(*WorkerComplete);
 	}

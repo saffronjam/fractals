@@ -3,6 +3,7 @@
 #include "Layers/BaseLayer.h"
 
 #include "FractalManager.h"
+#include "PaletteManager.h"
 
 namespace Se
 {
@@ -18,6 +19,7 @@ public:
 	void OnRenderTargetResize(const sf::Vector2f &newSize) override;
 
 private:
+	Unique<PaletteManager> _paletteManager;
 	Shared<FractalManager> _fractalManager;
 
 };
