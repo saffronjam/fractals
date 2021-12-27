@@ -25,8 +25,8 @@ auto SimBox::operator!=(const SimBox& other) const -> bool
 }
 
 
-FractalSet::FractalSet(String name, FractalSetType type, const sf::Vector2f& renderSize) :
-	_name(Move(name)),
+FractalSet::FractalSet(std::string name, FractalSetType type, const sf::Vector2f& renderSize) :
+	_name(std::move(name)),
 	_type(type),
 	_simWidth(renderSize.x),
 	_simHeight(renderSize.y),
@@ -35,7 +35,7 @@ FractalSet::FractalSet(String name, FractalSetType type, const sf::Vector2f& ren
 {
 	PaletteManager::Instance().PaletteUpdated += [this]
 	{
-		MarkForImageRendering();
+		RequestImageRendering();
 		return false;
 	};
 
@@ -75,7 +75,7 @@ FractalSet::FractalSet(String name, FractalSetType type, const sf::Vector2f& ren
 
 	PaletteManager::Instance().PaletteUpdated += [this]()
 	{
-		MarkForImageRendering();
+		RequestImageRendering();
 		return false;
 	};
 }
@@ -111,23 +111,23 @@ void FractalSet::OnViewportResize(const sf::Vector2f& size)
 	}
 }
 
-void FractalSet::MarkForImageRendering() noexcept
+void FractalSet::RequestImageRendering() noexcept
 {
 	ActiveHost().RequestImageRendering();
 }
 
-void FractalSet::AddHost(enum class HostType type, Unique<Host> host)
+void FractalSet::AddHost(std::unique_ptr<Host> host)
 {
-	_hosts.emplace(type, Move(host));
+	_hosts.emplace(host->Type(), std::move(host));
 }
 
-void FractalSet::MarkForImageComputation() noexcept
+void FractalSet::RequestImageComputation() noexcept
 {
 	_lastGenerationRequest = Global::Clock::SinceStart();
 	ActiveHost().RequestImageComputation();
 }
 
-auto FractalSet::Name() const noexcept -> const String&
+auto FractalSet::Name() const noexcept -> const std::string&
 {
 	return _name;
 }
@@ -137,12 +137,12 @@ auto FractalSet::Type() const -> FractalSetType
 	return _type;
 }
 
-auto FractalSet::Places() const -> const List<FractalSetPlace>&
+auto FractalSet::Places() const -> const std::vector<FractalSetPlace>&
 {
 	return _places;
 }
 
-auto FractalSet::Hosts() const -> const HashMap<enum class HostType, Unique<Host>>&
+auto FractalSet::Hosts() const -> const std::unordered_map<enum class HostType, std::unique_ptr<Host>>&
 {
 	return _hosts;
 }
@@ -188,8 +188,8 @@ auto FractalSet::GenerationType() const -> FractalSetGenerationType
 void FractalSet::SetGenerationType(FractalSetGenerationType type)
 {
 	_generationType = type;
-	MarkForImageComputation();
-	MarkForImageRendering();
+	RequestImageComputation();
+	RequestImageRendering();
 }
 
 void FractalSet::ActivateAxis()
@@ -204,7 +204,7 @@ void FractalSet::DeactivateAxis()
 
 auto FractalSet::ActiveHost() -> Host&
 {
-	Debug::Assert(_hosts.contains(_activeHost));
+	Debug::Assert(_hosts.contains(_activeHost), "No active host");
 	return *_hosts.at(_activeHost);
 }
 

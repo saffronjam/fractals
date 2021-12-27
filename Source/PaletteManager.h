@@ -13,7 +13,7 @@ enum class PaletteType
 	Rainbow
 };
 
-class PaletteManager : public SingleTon<PaletteManager>
+class PaletteManager : public Singleton<PaletteManager>
 {
 public:
 	PaletteManager();
@@ -31,7 +31,7 @@ public:
 public:
 	static constexpr int PaletteWidth = 2048;
 
-	EventSubscriberList<void> PaletteUpdated;
+	SubscriberList<void> PaletteUpdated;
 
 public:
 	struct TransitionColor
@@ -42,7 +42,7 @@ public:
 		float a;
 	};
 
-	HashMap<PaletteType, Shared<sf::Image>> _palettes;
+	std::unordered_map<PaletteType, std::shared_ptr<sf::Image>> _palettes;
 
 	sf::Texture _texture;
 	bool _wantTextureUpload = true;
@@ -50,8 +50,8 @@ public:
 	// Animate palette change
 	PaletteType _desired;
 	sf::Image _currentPalette;
-	Array<TransitionColor, PaletteWidth> _colorsStart;
-	Array<TransitionColor, PaletteWidth> _colorsCurrent;
+	std::array<TransitionColor, PaletteWidth> _colorsStart;
+	std::array<TransitionColor, PaletteWidth> _colorsCurrent;
 	float _colorTransitionTimer = 0.0f;
 	float _colorTransitionDuration = 0.7f;
 };

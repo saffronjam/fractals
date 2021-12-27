@@ -5,7 +5,7 @@
 namespace Se
 {
 CpuHost::CpuHost(int simWidth, int simHeight) :
-	Host("CPU", simWidth, simHeight),
+	Host(HostType::Cpu, "CPU", simWidth, simHeight),
 	_vertexArray(sf::PrimitiveType::Points, SimWidth() * SimHeight()),
 	_fractalArray(new int[SimWidth() * SimHeight()])
 {
@@ -35,22 +35,22 @@ void CpuHost::OnRender(Scene& scene)
 	scene.DeactivateScreenSpaceDrawing();
 }
 
-void CpuHost::AddWorker(Unique<Worker> worker)
+void CpuHost::AddWorker(std::unique_ptr<Worker> worker)
 {
 	worker->WorkerComplete = &_nWorkerComplete;
 	worker->FractalArray = _fractalArray;
 	worker->SimWidth = SimWidth();
 	worker->Alive = true;
-	worker->Thread = Thread(&Worker::Compute, &*worker);
-	_workers.emplace_back(Move(worker));
+	worker->Thread = std::thread(&Worker::Compute, &*worker);
+	_workers.emplace_back(std::move(worker));
 }
 
-auto CpuHost::Workers() -> List<Unique<Worker>>&
+auto CpuHost::Workers() -> std::vector<std::unique_ptr<Worker>>&
 {
 	return _workers;
 }
 
-auto CpuHost::Workers() const -> const List<Unique<Worker>>&
+auto CpuHost::Workers() const -> const std::vector<std::unique_ptr<Worker>>&
 {
 	return const_cast<CpuHost&>(*this).Workers();
 }

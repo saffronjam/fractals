@@ -16,13 +16,13 @@ Mandelbrot::Mandelbrot(const sf::Vector2f& renderSize) :
 {
 	const auto x = renderSize.x, y = renderSize.y;
 
-	auto cpuHost = CreateUnique<CpuHost>(x, y);
-	auto comHost = CreateUnique<ComputeShaderHost>("mandelbrot.comp", x, y, sf::Vector2u(x, y));
-	auto pixHost = CreateUnique<PixelShaderHost>("mandelbrot.frag", x, y);
+	auto cpuHost = std::make_unique<CpuHost>(x, y);
+	auto comHost = std::make_unique<ComputeShaderHost>("mandelbrot.comp", x, y, sf::Vector2u(x, y));
+	auto pixHost = std::make_unique<PixelShaderHost>("mandelbrot.frag", x, y);
 
 	for (int i = 0; i < 32; i++)
 	{
-		cpuHost->AddWorker(CreateUnique<MandelbrotWorker>());
+		cpuHost->AddWorker(std::make_unique<MandelbrotWorker>());
 	}
 
 	comHost->RequestUniformUpdate += [this](ComputeShader& shader)
@@ -37,9 +37,9 @@ Mandelbrot::Mandelbrot(const sf::Vector2f& renderSize) :
 		return false;
 	};
 
-	AddHost(HostType::Cpu, Move(cpuHost));
-	AddHost(HostType::GpuComputeShader, Move(comHost));
-	AddHost(HostType::GpuPixelShader, Move(pixHost));
+	AddHost(std::move(cpuHost));
+	AddHost(std::move(comHost));
+	AddHost(std::move(pixHost));
 
 	_places.push_back({"Elephant Valley", {0.3, 0.0}, 700});
 }

@@ -2,12 +2,12 @@
 
 namespace Se
 {
-void ProjectLayer::OnAttach(Shared<Batch>& loader)
+void ProjectLayer::OnAttach(std::shared_ptr<Batch>& loader)
 {
 	BaseLayer::OnAttach(loader);
 
-	_paletteManager = CreateUnique<PaletteManager>();
-	_fractalManager = CreateShared<FractalManager>(_scene.ViewportPane().ViewportSize());
+	_paletteManager = std::make_unique<PaletteManager>();
+	_fractalManager = std::make_shared<FractalManager>(_scene.ViewportPane().ViewportSize());
 
 	_camera.ApplyZoom(200.0f);
 	_camera.Reset += [this]()

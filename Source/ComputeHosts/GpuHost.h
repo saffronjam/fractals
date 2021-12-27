@@ -14,7 +14,7 @@ template<class ShaderClass>
 class GpuHost : public Host
 {
 public:
-	GpuHost(String name, int simWidth, int simHeight);
+	GpuHost(HostType type, std::string name, int simWidth, int simHeight);
 
 	void OnRender(Scene& scene) override;
 
@@ -25,17 +25,17 @@ protected:
 	virtual auto TextureHandle() const -> uint = 0;
 
 public:
-	EventSubscriberList<ShaderClass&> RequestUniformUpdate;
+	SubscriberList<ShaderClass&> RequestUniformUpdate;
 
 protected:
-	Shared<sf::Shader> _painterPS;
+	std::shared_ptr<sf::Shader> _painterPS;
 	sf::RenderTexture _target;
 };
 
 
 template<class ShaderClass>
-GpuHost<ShaderClass>::GpuHost(String name, int simWidth, int simHeight) :
-	Host(Move(name), simWidth, simHeight),
+GpuHost<ShaderClass>::GpuHost(HostType type, std::string name, int simWidth, int simHeight) :
+	Host(type, std::move(name), simWidth, simHeight),
 	_painterPS(ShaderStore::Get("painter.frag", sf::Shader::Type::Fragment))
 {
 	_target.create(simWidth, simHeight);

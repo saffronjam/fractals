@@ -9,7 +9,7 @@ class BaseLayer : public Layer
 public:
 	BaseLayer();
 
-	void OnAttach(Shared<Batch> &loader) override;
+	void OnAttach(std::shared_ptr<Batch> &loader) override;
 	void OnDetach() override;
 
 	void OnPreFrame() override;
@@ -25,7 +25,7 @@ private:
 	void OnWantRenderTargetResize(const sf::Vector2f &newSize);
 
 public:
-	EventSubscriberList<const sf::Vector2f &> RenderTargetResized;
+	SubscriberList<const sf::Vector2f &> RenderTargetResized;
 
 protected:
 	ControllableRenderTexture _controllableRenderTexture;

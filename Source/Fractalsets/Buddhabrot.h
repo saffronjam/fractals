@@ -23,7 +23,7 @@ private:
 	uint _ssbo;
 
 	float _pointCoverage = 50.0f;
-	List<Position> _points;
+	std::vector<Position> _points;
 
 private:
 	struct BuddhabrotWorker : Worker

@@ -29,14 +29,15 @@ struct SimBox
 class Host
 {
 public:
-	Host(String name, int simWidth, int simHeight);
+	Host(HostType type, std::string name, int simWidth, int simHeight);
 	virtual ~Host() = default;
 
 	void OnUpdate(Scene& scene);
 	virtual void OnRender(Scene& scene) = 0;
 	virtual void OnViewportResize(const sf::Vector2f& size);
 
-	auto Name() const -> const String&;
+	auto Name() const -> const std::string&;
+	auto Type() const -> HostType;
 
 	auto SimBox() const -> const struct SimBox&;
 	void SetSimBox(const struct SimBox& simBox);
@@ -72,10 +73,11 @@ protected:
 	virtual void Resize(int width, int height) = 0;
 
 private:
+	HostType _type;
 	bool _computationRequested = true;
 	bool _renderRequested = true;
 	bool _resizeRequsted = true;
-	String _name;
+	std::string _name;
 	sf::Vector2f _desiredSize;
 	ulong _computeIterations = 64;
 	struct SimBox _simBox;

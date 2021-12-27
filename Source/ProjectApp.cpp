@@ -3,14 +3,14 @@
 
 namespace Se
 {
-auto CreateApplication() -> Unique<App>
+auto CreateApplication() -> std::unique_ptr<App>
 {
-	return CreateUnique<ProjectApp>(AppProperties::CreateFullscreen("Fractals"));
+	return std::make_unique<ProjectApp>(AppProperties::CreateCentered("Fractals", 1024, 720));
 }
 
 ProjectApp::ProjectApp(const AppProperties& properties) :
 	App(properties),
-	_projectLayer(CreateShared<ProjectLayer>())
+	_projectLayer(std::make_shared<ProjectLayer>())
 {
 }
 

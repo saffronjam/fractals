@@ -9,47 +9,68 @@ namespace Se
 using RealType = double;
 using Position = sf::Vector2<double>;
 
-static void SetUniform(uint id, const String& name, const sf::Vector2<double>& value)
+inline void ExecuteIfFound(uint id, const std::string& name, const std::function<void(int)>& shaderOp)
 {
 	glUseProgram(id);
 
 	const auto loc = glGetUniformLocation(id, name.c_str());
-	Debug::Assert(loc != -1);
-	glUniform2d(loc, value.x, value.y);
+	if (loc == -1)
+	{
+		Log::Warn("Could not found shader uniform \"" + name + "\". Check spelling or if it was optimized away");
+	}
+	else
+	{
+		shaderOp(loc);
+	}
 
 	glUseProgram(0);
 }
 
-static void SetUniform(uint id, const String& name, float value)
+static void SetUniform(uint id, const std::string& name, const std::array<double, 4>& value)
 {
-	glUseProgram(id);
-
-	const auto loc = glGetUniformLocation(id, name.c_str());
-	Debug::Assert(loc != -1);
-	glUniform1f(loc, value);
-
-	glUseProgram(0);
+	ExecuteIfFound(id, name, [&](int loc)
+	{
+		glUniform4d(loc, value[0], value[1], value[2], value[3]);
+	});
 }
 
-static void SetUniform(uint id, const String& name, double value)
+static void SetUniform(uint id, const std::string& name, const sf::Vector4<double>& value)
 {
-	glUseProgram(id);
-
-	const auto loc = glGetUniformLocation(id, name.c_str());
-	Debug::Assert(loc != -1);
-	glUniform1d(loc, value);
-
-	glUseProgram(0);
+	ExecuteIfFound(id, name, [&](int loc)
+	{
+		glUniform4d(loc, value.x, value.y, value.z, value.w);
+	});
 }
 
-static void SetUniform(uint id, const String& name, int value)
+static void SetUniform(uint id, const std::string& name, const sf::Vector2<double>& value)
 {
-	glUseProgram(id);
+	ExecuteIfFound(id, name, [&](int loc)
+	{
+		glUniform2d(loc, value.x, value.y);
+	});
+}
 
-	const auto loc = glGetUniformLocation(id, name.c_str());
-	Debug::Assert(loc != -1);
-	glUniform1i(loc, value);
+static void SetUniform(uint id, const std::string& name, float value)
+{
+	ExecuteIfFound(id, name, [&](int loc)
+	{
+		glUniform1f(loc, value);
+	});
+}
 
-	glUseProgram(0);
+static void SetUniform(uint id, const std::string& name, double value)
+{
+	ExecuteIfFound(id, name, [&](int loc)
+	{
+		glUniform1d(loc, value);
+	});
+}
+
+static void SetUniform(uint id, const std::string& name, int value)
+{
+	ExecuteIfFound(id, name, [&](int loc)
+	{
+		glUniform1i(loc, value);
+	});
 }
 }

@@ -3,6 +3,7 @@
 #include "Fractalsets/Mandelbrot.h"
 #include "Fractalsets/Julia.h"
 #include "Fractalsets/Buddhabrot.h"
+#include "Fractalsets/Polynomial.h"
 
 namespace Se
 {
@@ -31,6 +32,7 @@ private:
 	void SetJuliaC(const std::complex<double>& c);
 	void SetJuliaCr(double r, bool animate);
 	void SetJuliaCi(double i, bool animate);
+	void SetPolynomialConstants(const std::array<float, Polynomial::PolynomialDegree>& constants, bool animate);
 	void SetPalette(PaletteType palette);
 	void SetGenerationType(FractalSetGenerationType type);
 	void AddMandelbrotDrawFlags(MandelbrotDrawFlags flags);
@@ -56,7 +58,7 @@ private:
 	auto ActiveGenerationType() -> FractalSetGenerationType;
 
 private:
-	List<Unique<FractalSet>> _fractalSets;
+	std::vector<std::unique_ptr<FractalSet>> _fractalSets;
 	FractalSetType _activeFractalSetType;
 
 	SimBox _lastViewport;
@@ -64,12 +66,12 @@ private:
 	sf::Vector2f _viewportMousePosition = VecUtils::Null<>();
 
 	// Gui cache
-	List<const char*> _fractalSetComboBoxNames;
-	List<const char*> _paletteComboBoxNames;
-	List<const char*> _precisionComboBoxNames;
-	List<const char*> _fractalSetGenerationTypeNames;
-	List<const char*> _hostNamesCache;
-	List<HostType> _hostTypeCache;
+	std::vector<const char*> _fractalSetComboBoxNames;
+	std::vector<const char*> _paletteComboBoxNames;
+	std::vector<const char*> _precisionComboBoxNames;
+	std::vector<const char*> _fractalSetGenerationTypeNames;
+	std::vector<const char*> _hostNamesCache;
+	std::vector<HostType> _hostTypeCache;
 	int _activeFractalSetInt = static_cast<int>(FractalSetType::Mandelbrot);
 	int _activePaletteInt = static_cast<int>(PaletteType::Fiery);
 	int _hostInt = -1;
@@ -99,6 +101,9 @@ private:
 	// Julia
 	int _juliaStateInt = static_cast<int>(JuliaState::None);
 	sf::Vector2f _juliaC;
+
+	// Polynomial
+	std::array<float, Polynomial::PolynomialDegree> _polynomialConstants{};
 
 	// Shared
 	bool _axis = false;

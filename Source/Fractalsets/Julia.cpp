@@ -9,13 +9,13 @@ Julia::Julia(const sf::Vector2f& renderSize) :
 {
 	const auto x = renderSize.x, y = renderSize.y;
 
-	auto cpuHost = CreateUnique<CpuHost>(x, y);
-	auto comHost = CreateUnique<ComputeShaderHost>("julia.comp", x, y, sf::Vector2u(x, y));
-	auto pixHost = CreateUnique<PixelShaderHost>("julia.frag", x, y);
+	auto cpuHost = std::make_unique<CpuHost>(x, y);
+	auto comHost = std::make_unique<ComputeShaderHost>("julia.comp", x, y, sf::Vector2u(x, y));
+	auto pixHost = std::make_unique<PixelShaderHost>("julia.frag", x, y);
 
 	for (int i = 0; i < 32; i++)
 	{
-		cpuHost->AddWorker(CreateUnique<JuliaWorker>());
+		cpuHost->AddWorker(std::make_unique<JuliaWorker>());
 	}
 
 	comHost->RequestUniformUpdate += [this](ComputeShader& shader)
@@ -30,9 +30,9 @@ Julia::Julia(const sf::Vector2f& renderSize) :
 		return false;
 	};
 
-	AddHost(HostType::Cpu, Move(cpuHost));
-	AddHost(HostType::GpuComputeShader, Move(comHost));
-	AddHost(HostType::GpuPixelShader, Move(pixHost));
+	AddHost(std::move(cpuHost));
+	AddHost(std::move(comHost));
+	AddHost(std::move(pixHost));
 }
 
 void Julia::OnUpdate(Scene& scene)
@@ -70,8 +70,8 @@ void Julia::OnUpdate(Scene& scene)
 
 	if (_currentC != _desiredC)
 	{
-		MarkForImageComputation();
-		MarkForImageRendering();
+		RequestImageComputation();
+		RequestImageRendering();
 	}
 	if (_cTransitionTimer <= _cTransitionDuration && _state == JuliaState::None)
 	{
@@ -197,15 +197,15 @@ auto Julia::TranslatePoint(const sf::Vector2f& point, int iterations) -> sf::Vec
 
 void Julia::SetC(const std::complex<double>& c, bool animate)
 {
-	if (animate && abs(c - _desiredC) > 0.1)
+	if (animate && std::abs(c - _desiredC) > 0.1)
 	{
 		_startC = _currentC;
 		_cTransitionTimer = 0.0f;
 	}
 	else
 	{
-		MarkForImageComputation();
-		MarkForImageRendering();
+		RequestImageComputation();
+		RequestImageRendering();
 	}
 	_currentC = c;
 	_desiredC = c;

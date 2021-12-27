@@ -10,9 +10,10 @@ FractalManager::FractalManager(const sf::Vector2f& renderSize) :
 	_precisionComboBoxNames({"32-bit", "64-bit"}),
 	_fractalSetGenerationTypeNames({"Automatic", "Delayed", "Manual"})
 {
-	_fractalSets.emplace_back(CreateUnique<Mandelbrot>(renderSize));
-	_fractalSets.emplace_back(CreateUnique<Julia>(renderSize));
-	_fractalSets.emplace_back(CreateUnique<Buddhabrot>(renderSize));
+	_fractalSets.emplace_back(std::make_unique<Mandelbrot>(renderSize));
+	_fractalSets.emplace_back(std::make_unique<Julia>(renderSize));
+	_fractalSets.emplace_back(std::make_unique<Buddhabrot>(renderSize));
+	_fractalSets.emplace_back(std::make_unique<Polynomial>(renderSize));
 
 	_activeFractalSetType = FractalSetType::Mandelbrot;
 
@@ -23,7 +24,7 @@ FractalManager::FractalManager(const sf::Vector2f& renderSize) :
 
 	_hostInt = static_cast<int>(ActiveFractalSet().ActiveHostType());
 
-	const auto factor = 200.0;
+	constexpr auto factor = 200.0;
 	_cameraZoom *= factor;
 	_cameraZoomTransform.Scale(factor, factor);
 	UpdateTransform();
@@ -102,9 +103,9 @@ void FractalManager::OnUpdate(Scene& scene)
 
 		if (ActiveGenerationType() != FractalSetGenerationType::ManualGeneration)
 		{
-			ActiveFractalSet().MarkForImageComputation();
+			ActiveFractalSet().RequestImageComputation();
 		}
-		ActiveFractalSet().MarkForImageRendering();
+		ActiveFractalSet().RequestImageRendering();
 	}
 	ActiveFractalSet().OnUpdate(scene);
 }
@@ -313,6 +314,10 @@ void FractalManager::OnGuiRender()
 	{
 		break;
 	}
+	case FractalSetType::Polynomial:
+	{
+		break;
+	}
 	}
 
 	if (anyAdd) ImGui::Separator();
@@ -402,6 +407,33 @@ void FractalManager::OnGuiRender()
 		}
 		break;
 	}
+	case FractalSetType::Polynomial:
+	{
+		Gui::BeginPropertyGrid();
+
+		const auto& polynomial = ActiveFractalSet().As<Polynomial>();
+
+		_polynomialConstants = GenUtils::ConvertArrayTo<float>(polynomial.Constants());
+
+		const auto constantNameArr = std::array{"3rd", "2nd", "1st", "Literal"};
+		for (size_t i = 0; i < _polynomialConstants.size(); i++)
+		{
+			ImGui::Text("%s", constantNameArr[i]);
+			ImGui::NextColumn();
+			ImGui::PushItemWidth(-1);
+			const auto lastConstant = _polynomialConstants[i];
+			const auto id = std::string("##PolynomialConstants") + std::to_string(i);
+			if (ImGui::SliderFloat(id.c_str(), &_polynomialConstants[i], -6.0f, 6.0f))
+			{
+				const auto animate = std::abs(_polynomialConstants[i] - lastConstant) > 1.0;
+				SetPolynomialConstants(_polynomialConstants, false);
+			}
+			ImGui::NextColumn();
+		}
+
+		Gui::EndPropertyGrid();
+		break;
+	}
 	}
 
 	if (anyAdd) ImGui::Separator();
@@ -455,8 +487,8 @@ void FractalManager::SetFractalSet(FractalSetType type)
 	_activeFractalSetType = type;
 
 	auto& activeFractalSet = ActiveFractalSet();
-	activeFractalSet.MarkForImageComputation();
-	activeFractalSet.MarkForImageRendering();
+	activeFractalSet.RequestImageComputation();
+	activeFractalSet.RequestImageRendering();
 
 	_fractalSetGenerationTypeInt = static_cast<int>(ActiveFractalSet().GenerationType());
 
@@ -471,38 +503,46 @@ void FractalManager::SetComputeIterationCount(size_t iterations)
 		fractalSet->SetComputeIterationCount(iterations);
 		if (ActiveGenerationType() != FractalSetGenerationType::ManualGeneration)
 		{
-			fractalSet->MarkForImageComputation();
+			fractalSet->RequestImageComputation();
 		}
-		fractalSet->MarkForImageRendering();
+		fractalSet->RequestImageRendering();
 	}
 }
 
 void FractalManager::SetHost(HostType computeHost)
 {
 	ActiveFractalSet().SetHostType(computeHost);
-	ActiveFractalSet().MarkForImageComputation();
-	ActiveFractalSet().MarkForImageRendering();
+	ActiveFractalSet().RequestImageComputation();
+	ActiveFractalSet().RequestImageRendering();
 }
 
 void FractalManager::SetJuliaC(const std::complex<double>& c)
 {
 	auto& juliaSet = ActiveFractalSet().As<Julia>();
 	juliaSet.SetC(c, true);
-	juliaSet.MarkForImageRendering();
+	juliaSet.RequestImageRendering();
 }
 
 void FractalManager::SetJuliaCr(double r, bool animate)
 {
 	auto& juliaSet = ActiveFractalSet().As<Julia>();
 	juliaSet.SetCr(r, animate);
-	juliaSet.MarkForImageRendering();
+	juliaSet.RequestImageRendering();
 }
 
 void FractalManager::SetJuliaCi(double i, bool animate)
 {
 	auto& juliaSet = ActiveFractalSet().As<Julia>();
 	juliaSet.SetCi(i, animate);
-	juliaSet.MarkForImageRendering();
+	juliaSet.RequestImageRendering();
+}
+
+void FractalManager::SetPolynomialConstants(const std::array<float, Polynomial::PolynomialDegree>& constants,
+                                            bool animate)
+{
+	auto& polynomial = ActiveFractalSet().As<Polynomial>();
+	polynomial.SetConstants(GenUtils::ConvertArrayTo<double>(constants), animate);
+	polynomial.RequestImageRendering();
 }
 
 void FractalManager::SetPalette(PaletteType palette)
@@ -510,7 +550,7 @@ void FractalManager::SetPalette(PaletteType palette)
 	PaletteManager::Instance().SetActive(palette);
 	for (auto& fractalSet : _fractalSets)
 	{
-		fractalSet->MarkForImageRendering();
+		fractalSet->RequestImageRendering();
 	}
 }
 
@@ -584,12 +624,12 @@ void FractalManager::ResumeJuliaAnimation()
 
 void FractalManager::MarkForImageComputation()
 {
-	ActiveFractalSet().MarkForImageComputation();
+	ActiveFractalSet().RequestImageComputation();
 }
 
 void FractalManager::MarkForImageRendering()
 {
-	ActiveFractalSet().MarkForImageRendering();
+	ActiveFractalSet().RequestImageRendering();
 }
 
 void FractalManager::UpdateHighPrecCamera()
@@ -654,7 +694,7 @@ auto FractalManager::GenerateSimBox(const Camera& camera) const -> SimBox
 		const auto BR = Position(screenRect.left + screenRect.width, screenRect.top + screenRect.height);
 		const auto inv = _cameraTransform.Inverse();
 
-		const auto [topLeft, topRight] = CreatePair(inv.TransformPoint(TL), inv.TransformPoint(BR));
+		const auto [topLeft, topRight] = std::make_pair(inv.TransformPoint(TL), inv.TransformPoint(BR));
 
 		return SimBox{Position(topLeft.x, topLeft.y), Position(topRight.x, topRight.y)};
 	}

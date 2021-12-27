@@ -10,7 +10,7 @@ namespace Se
 class ProjectLayer : public BaseLayer
 {
 public:
-	void OnAttach(Shared<Batch> &loader) override;
+	void OnAttach(std::shared_ptr<Batch> &loader) override;
 	void OnDetach() override;
 
 	void OnUpdate() override;
@@ -19,8 +19,8 @@ public:
 	void OnRenderTargetResize(const sf::Vector2f &newSize) override;
 
 private:
-	Unique<PaletteManager> _paletteManager;
-	Shared<FractalManager> _fractalManager;
+	std::unique_ptr<PaletteManager> _paletteManager;
+	std::shared_ptr<FractalManager> _fractalManager;
 
 };
 }
