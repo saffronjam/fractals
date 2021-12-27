@@ -5,7 +5,7 @@
 namespace Se
 {
 PaletteManager::PaletteManager() :
-	SingleTon(this),
+	Singleton(this),
 	_desired(PaletteType::Fiery)
 {
 	// Create and initial upload

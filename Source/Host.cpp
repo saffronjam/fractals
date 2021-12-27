@@ -2,9 +2,9 @@
 
 namespace Se
 {
-Host::Host(String name, int simWidth, int simHeight) :
+Host::Host(std::string name, int simWidth, int simHeight) :
 	_simBox(Position(), Position()),
-	_name(Move(name)),
+	_name(std::move(name)),
 	_simWidth(simWidth),
 	_simHeight(simHeight)
 {
@@ -38,7 +38,7 @@ void Host::OnViewportResize(const sf::Vector2f& size)
 	RequestResize(size);
 }
 
-auto Host::Name() const -> const String&
+auto Host::Name() const -> const std::string&
 {
 	return _name;
 }

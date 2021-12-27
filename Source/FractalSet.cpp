@@ -25,8 +25,8 @@ auto SimBox::operator!=(const SimBox& other) const -> bool
 }
 
 
-FractalSet::FractalSet(String name, FractalSetType type, const sf::Vector2f& renderSize) :
-	_name(Move(name)),
+FractalSet::FractalSet(std::string name, FractalSetType type, const sf::Vector2f& renderSize) :
+	_name(std::move(name)),
 	_type(type),
 	_simWidth(renderSize.x),
 	_simHeight(renderSize.y),
@@ -116,9 +116,9 @@ void FractalSet::MarkForImageRendering() noexcept
 	ActiveHost().RequestImageRendering();
 }
 
-void FractalSet::AddHost(enum class HostType type, Unique<Host> host)
+void FractalSet::AddHost(enum class HostType type, std::unique_ptr<Host> host)
 {
-	_hosts.emplace(type, Move(host));
+	_hosts.emplace(type, std::move(host));
 }
 
 void FractalSet::MarkForImageComputation() noexcept
@@ -127,7 +127,7 @@ void FractalSet::MarkForImageComputation() noexcept
 	ActiveHost().RequestImageComputation();
 }
 
-auto FractalSet::Name() const noexcept -> const String&
+auto FractalSet::Name() const noexcept -> const std::string&
 {
 	return _name;
 }
@@ -137,12 +137,12 @@ auto FractalSet::Type() const -> FractalSetType
 	return _type;
 }
 
-auto FractalSet::Places() const -> const List<FractalSetPlace>&
+auto FractalSet::Places() const -> const std::vector<FractalSetPlace>&
 {
 	return _places;
 }
 
-auto FractalSet::Hosts() const -> const HashMap<enum class HostType, Unique<Host>>&
+auto FractalSet::Hosts() const -> const std::unordered_map<enum class HostType, std::unique_ptr<Host>>&
 {
 	return _hosts;
 }

@@ -9,13 +9,13 @@ Julia::Julia(const sf::Vector2f& renderSize) :
 {
 	const auto x = renderSize.x, y = renderSize.y;
 
-	auto cpuHost = CreateUnique<CpuHost>(x, y);
-	auto comHost = CreateUnique<ComputeShaderHost>("julia.comp", x, y, sf::Vector2u(x, y));
-	auto pixHost = CreateUnique<PixelShaderHost>("julia.frag", x, y);
+	auto cpuHost = std::make_unique<CpuHost>(x, y);
+	auto comHost = std::make_unique<ComputeShaderHost>("julia.comp", x, y, sf::Vector2u(x, y));
+	auto pixHost = std::make_unique<PixelShaderHost>("julia.frag", x, y);
 
 	for (int i = 0; i < 32; i++)
 	{
-		cpuHost->AddWorker(CreateUnique<JuliaWorker>());
+		cpuHost->AddWorker(std::make_unique<JuliaWorker>());
 	}
 
 	comHost->RequestUniformUpdate += [this](ComputeShader& shader)
@@ -30,9 +30,9 @@ Julia::Julia(const sf::Vector2f& renderSize) :
 		return false;
 	};
 
-	AddHost(HostType::Cpu, Move(cpuHost));
-	AddHost(HostType::GpuComputeShader, Move(comHost));
-	AddHost(HostType::GpuPixelShader, Move(pixHost));
+	AddHost(HostType::Cpu, std::move(cpuHost));
+	AddHost(HostType::GpuComputeShader, std::move(comHost));
+	AddHost(HostType::GpuPixelShader, std::move(pixHost));
 }
 
 void Julia::OnUpdate(Scene& scene)

@@ -10,7 +10,7 @@ struct Worker
 	virtual ~Worker() = default;
 	virtual void Compute() = 0;
 
-	Atomic<size_t>* WorkerComplete = nullptr;
+	std::atomic<size_t>* WorkerComplete = nullptr;
 
 	int* FractalArray;
 	int SimWidth = 0;
@@ -23,9 +23,9 @@ struct Worker
 	size_t Iterations = 0;
 	bool Alive = true;
 
-	Thread Thread;
-	ConditionVariable CvStart;
-	Mutex Mutex;
+	std::thread Thread;
+	std::condition_variable CvStart;
+	std::mutex Mutex;
 };
 
 class CpuHost : public Host
@@ -36,9 +36,9 @@ public:
 
 	void OnRender(Scene& scene) override;
 
-	void AddWorker(Unique<Worker> worker);
-	auto Workers() -> List<Unique<Worker>>&;
-	auto Workers() const -> const List<Unique<Worker>>&;
+	void AddWorker(std::unique_ptr<Worker> worker);
+	auto Workers() -> std::vector<std::unique_ptr<Worker>>&;
+	auto Workers() const -> const std::vector<std::unique_ptr<Worker>>&;
 
 private:
 	void ComputeImage() override;
@@ -46,8 +46,8 @@ private:
 	void Resize(int width, int height) override;
 
 private:
-	List<Unique<Worker>> _workers;
-	Atomic<size_t> _nWorkerComplete = 0;
+	std::vector<std::unique_ptr<Worker>> _workers;
+	std::atomic<size_t> _nWorkerComplete = 0;
 
 	sf::VertexArray _vertexArray;
 	int* _fractalArray;

@@ -42,8 +42,8 @@ public:
 	void PauseAnimation();
 	auto Paused() const -> bool;
 
-	const std::complex<double>& C() const noexcept;
-	JuliaDrawFlags DrawFlags() const;
+	auto C() const noexcept -> const std::complex<double>&;
+	auto DrawFlags() const -> JuliaDrawFlags;
 
 	void SetState(JuliaState state) noexcept;
 	void SetDrawFlags(JuliaDrawFlags flags);

@@ -27,7 +27,7 @@ enum class FractalSetGenerationType
 
 struct FractalSetPlace
 {
-	String Name;
+	std::string Name;
 	Position Position;
 	double Zoom;
 };
@@ -35,7 +35,7 @@ struct FractalSetPlace
 class FractalSet
 {
 public:
-	FractalSet(String name, FractalSetType type, const sf::Vector2f& renderSize);
+	FractalSet(std::string name, FractalSetType type, const sf::Vector2f& renderSize);
 	virtual ~FractalSet() = default;
 
 	virtual void OnUpdate(Scene& scene);
@@ -45,13 +45,13 @@ public:
 	void MarkForImageComputation() noexcept;
 	void MarkForImageRendering() noexcept;
 
-	void AddHost(enum class HostType type, Unique<Host> host);
+	void AddHost(enum class HostType type, std::unique_ptr<Host> host);
 
-	auto Name() const noexcept -> const String&;
+	auto Name() const noexcept -> const std::string&;
 	auto Type() const -> FractalSetType;
-	auto Places() const -> const List<FractalSetPlace>&;
+	auto Places() const -> const std::vector<FractalSetPlace>&;
 
-	auto Hosts() const -> const HashMap<enum class HostType, Unique<Host>>&;
+	auto Hosts() const -> const std::unordered_map<enum class HostType, std::unique_ptr<Host>>&;
 	auto ActiveHostType() const -> HostType;
 	void SetHostType(enum class HostType computeHost);
 
@@ -82,10 +82,10 @@ public:
 	auto ActiveHost() const -> const Host&;
 
 protected:
-	String _name;
+	std::string _name;
 	FractalSetType _type;
-	List<FractalSetPlace> _places;
-	HashMap<enum class HostType, Unique<Host>> _hosts;
+	std::vector<FractalSetPlace> _places;
+	std::unordered_map<enum class HostType, std::unique_ptr<Host>> _hosts;
 
 	enum class HostType _activeHost = HostType::Cpu;
 	FractalSetGenerationType _generationType = FractalSetGenerationType::AutomaticGeneration;

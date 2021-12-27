@@ -9,7 +9,7 @@ namespace Se
 using RealType = double;
 using Position = sf::Vector2<double>;
 
-static void SetUniform(uint id, const String& name, const sf::Vector2<double>& value)
+static void SetUniform(uint id, const std::string& name, const sf::Vector2<double>& value)
 {
 	glUseProgram(id);
 
@@ -20,7 +20,7 @@ static void SetUniform(uint id, const String& name, const sf::Vector2<double>& v
 	glUseProgram(0);
 }
 
-static void SetUniform(uint id, const String& name, float value)
+static void SetUniform(uint id, const std::string& name, float value)
 {
 	glUseProgram(id);
 
@@ -31,7 +31,7 @@ static void SetUniform(uint id, const String& name, float value)
 	glUseProgram(0);
 }
 
-static void SetUniform(uint id, const String& name, double value)
+static void SetUniform(uint id, const std::string& name, double value)
 {
 	glUseProgram(id);
 
@@ -42,7 +42,7 @@ static void SetUniform(uint id, const String& name, double value)
 	glUseProgram(0);
 }
 
-static void SetUniform(uint id, const String& name, int value)
+static void SetUniform(uint id, const std::string& name, int value)
 {
 	glUseProgram(id);
 

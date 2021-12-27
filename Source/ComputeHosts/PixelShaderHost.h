@@ -7,7 +7,7 @@ namespace Se
 class PixelShaderHost : public GpuHost<sf::Shader>
 {
 public:
-	PixelShaderHost(const Path& pixelShaderPath, int simWidth, int simHeight);
+	PixelShaderHost(const std::filesystem::path& pixelShaderPath, int simWidth, int simHeight);
 
 protected:
 	void ComputeImage() override;
@@ -16,7 +16,7 @@ protected:
 	auto TextureHandle() const -> uint override;
 
 private:
-	Shared<sf::Shader> _shader;
+	std::shared_ptr<sf::Shader> _shader;
 	sf::RenderTexture _output;
 };
 }

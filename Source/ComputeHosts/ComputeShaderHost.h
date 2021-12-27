@@ -7,7 +7,7 @@ namespace Se
 class ComputeShaderHost : public GpuHost<ComputeShader>
 {
 public:
-	ComputeShaderHost(const Path& computeShaderPath, int simWidth, int simHeight, sf::Vector2u dimensions);
+	ComputeShaderHost(const std::filesystem::path& computeShaderPath, int simWidth, int simHeight, sf::Vector2u dimensions);
 
 	void OnViewportResize(const sf::Vector2f& size) override;
 
@@ -21,9 +21,9 @@ private:
 	auto TextureHandle() const -> uint override;
 
 private:
-	Shared<class ComputeShader> _shader;
+	std::shared_ptr<class ComputeShader> _shader;
 	sf::Vector2u _dimensions;
-	List<sf::Color> _blackColorCache;
+	std::vector<sf::Color> _blackColorCache;
 	
 	sf::Texture _output;
 };

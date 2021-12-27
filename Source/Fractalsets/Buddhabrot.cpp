@@ -28,7 +28,7 @@ Buddhabrot::Buddhabrot(const sf::Vector2f& renderSize) :
 
 	const auto x = renderSize.x, y = renderSize.y;
 
-	auto comHost = CreateUnique<ComputeShaderHost>("buddhabrot.comp", x, y, sf::Vector2u(x, y));
+	auto comHost = std::make_unique<ComputeShaderHost>("buddhabrot.comp", x, y, sf::Vector2u(x, y));
 
 	comHost->RequestUniformUpdate += [this](ComputeShader& computeShader)
 	{
@@ -36,7 +36,7 @@ Buddhabrot::Buddhabrot(const sf::Vector2f& renderSize) :
 		return false;
 	};
 
-	AddHost(HostType::GpuComputeShader, Move(comHost));
+	AddHost(HostType::GpuComputeShader, std::move(comHost));
 
 	// Todo: Fix this
 	/*for (int i = 0; i < 32; i++)

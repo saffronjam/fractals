@@ -10,9 +10,9 @@ FractalManager::FractalManager(const sf::Vector2f& renderSize) :
 	_precisionComboBoxNames({"32-bit", "64-bit"}),
 	_fractalSetGenerationTypeNames({"Automatic", "Delayed", "Manual"})
 {
-	_fractalSets.emplace_back(CreateUnique<Mandelbrot>(renderSize));
-	_fractalSets.emplace_back(CreateUnique<Julia>(renderSize));
-	_fractalSets.emplace_back(CreateUnique<Buddhabrot>(renderSize));
+	_fractalSets.emplace_back(std::make_unique<Mandelbrot>(renderSize));
+	_fractalSets.emplace_back(std::make_unique<Julia>(renderSize));
+	_fractalSets.emplace_back(std::make_unique<Buddhabrot>(renderSize));
 
 	_activeFractalSetType = FractalSetType::Mandelbrot;
 
@@ -654,7 +654,7 @@ auto FractalManager::GenerateSimBox(const Camera& camera) const -> SimBox
 		const auto BR = Position(screenRect.left + screenRect.width, screenRect.top + screenRect.height);
 		const auto inv = _cameraTransform.Inverse();
 
-		const auto [topLeft, topRight] = CreatePair(inv.TransformPoint(TL), inv.TransformPoint(BR));
+		const auto [topLeft, topRight] = std::make_pair(inv.TransformPoint(TL), inv.TransformPoint(BR));
 
 		return SimBox{Position(topLeft.x, topLeft.y), Position(topRight.x, topRight.y)};
 	}

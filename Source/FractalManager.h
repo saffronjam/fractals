@@ -56,7 +56,7 @@ private:
 	auto ActiveGenerationType() -> FractalSetGenerationType;
 
 private:
-	List<Unique<FractalSet>> _fractalSets;
+	std::vector<std::unique_ptr<FractalSet>> _fractalSets;
 	FractalSetType _activeFractalSetType;
 
 	SimBox _lastViewport;
@@ -64,12 +64,12 @@ private:
 	sf::Vector2f _viewportMousePosition = VecUtils::Null<>();
 
 	// Gui cache
-	List<const char*> _fractalSetComboBoxNames;
-	List<const char*> _paletteComboBoxNames;
-	List<const char*> _precisionComboBoxNames;
-	List<const char*> _fractalSetGenerationTypeNames;
-	List<const char*> _hostNamesCache;
-	List<HostType> _hostTypeCache;
+	std::vector<const char*> _fractalSetComboBoxNames;
+	std::vector<const char*> _paletteComboBoxNames;
+	std::vector<const char*> _precisionComboBoxNames;
+	std::vector<const char*> _fractalSetGenerationTypeNames;
+	std::vector<const char*> _hostNamesCache;
+	std::vector<HostType> _hostTypeCache;
 	int _activeFractalSetInt = static_cast<int>(FractalSetType::Mandelbrot);
 	int _activePaletteInt = static_cast<int>(PaletteType::Fiery);
 	int _hostInt = -1;
