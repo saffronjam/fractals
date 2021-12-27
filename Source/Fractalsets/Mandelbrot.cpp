@@ -37,9 +37,9 @@ Mandelbrot::Mandelbrot(const sf::Vector2f& renderSize) :
 		return false;
 	};
 
-	AddHost(HostType::Cpu, std::move(cpuHost));
-	AddHost(HostType::GpuComputeShader, std::move(comHost));
-	AddHost(HostType::GpuPixelShader, std::move(pixHost));
+	AddHost(std::move(cpuHost));
+	AddHost(std::move(comHost));
+	AddHost(std::move(pixHost));
 
 	_places.push_back({"Elephant Valley", {0.3, 0.0}, 700});
 }

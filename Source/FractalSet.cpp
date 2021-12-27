@@ -35,7 +35,7 @@ FractalSet::FractalSet(std::string name, FractalSetType type, const sf::Vector2f
 {
 	PaletteManager::Instance().PaletteUpdated += [this]
 	{
-		MarkForImageRendering();
+		RequestImageRendering();
 		return false;
 	};
 
@@ -75,7 +75,7 @@ FractalSet::FractalSet(std::string name, FractalSetType type, const sf::Vector2f
 
 	PaletteManager::Instance().PaletteUpdated += [this]()
 	{
-		MarkForImageRendering();
+		RequestImageRendering();
 		return false;
 	};
 }
@@ -111,17 +111,17 @@ void FractalSet::OnViewportResize(const sf::Vector2f& size)
 	}
 }
 
-void FractalSet::MarkForImageRendering() noexcept
+void FractalSet::RequestImageRendering() noexcept
 {
 	ActiveHost().RequestImageRendering();
 }
 
-void FractalSet::AddHost(enum class HostType type, std::unique_ptr<Host> host)
+void FractalSet::AddHost(std::unique_ptr<Host> host)
 {
-	_hosts.emplace(type, std::move(host));
+	_hosts.emplace(host->Type(), std::move(host));
 }
 
-void FractalSet::MarkForImageComputation() noexcept
+void FractalSet::RequestImageComputation() noexcept
 {
 	_lastGenerationRequest = Global::Clock::SinceStart();
 	ActiveHost().RequestImageComputation();
@@ -188,8 +188,8 @@ auto FractalSet::GenerationType() const -> FractalSetGenerationType
 void FractalSet::SetGenerationType(FractalSetGenerationType type)
 {
 	_generationType = type;
-	MarkForImageComputation();
-	MarkForImageRendering();
+	RequestImageComputation();
+	RequestImageRendering();
 }
 
 void FractalSet::ActivateAxis()
@@ -204,7 +204,7 @@ void FractalSet::DeactivateAxis()
 
 auto FractalSet::ActiveHost() -> Host&
 {
-	Debug::Assert(_hosts.contains(_activeHost));
+	Debug::Assert(_hosts.contains(_activeHost), "No active host");
 	return *_hosts.at(_activeHost);
 }
 

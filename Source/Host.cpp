@@ -2,7 +2,8 @@
 
 namespace Se
 {
-Host::Host(std::string name, int simWidth, int simHeight) :
+Host::Host(HostType type, std::string name, int simWidth, int simHeight) :
+	_type(type),
 	_simBox(Position(), Position()),
 	_name(std::move(name)),
 	_simWidth(simWidth),
@@ -41,6 +42,11 @@ void Host::OnViewportResize(const sf::Vector2f& size)
 auto Host::Name() const -> const std::string&
 {
 	return _name;
+}
+
+auto Host::Type() const -> HostType
+{
+	return _type;
 }
 
 void Host::RequestImageComputation()

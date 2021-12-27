@@ -3,6 +3,7 @@
 #include "Fractalsets/Mandelbrot.h"
 #include "Fractalsets/Julia.h"
 #include "Fractalsets/Buddhabrot.h"
+#include "Fractalsets/Polynomial.h"
 
 namespace Se
 {
@@ -31,6 +32,7 @@ private:
 	void SetJuliaC(const std::complex<double>& c);
 	void SetJuliaCr(double r, bool animate);
 	void SetJuliaCi(double i, bool animate);
+	void SetPolynomialConstants(const std::array<float, Polynomial::PolynomialDegree>& constants, bool animate);
 	void SetPalette(PaletteType palette);
 	void SetGenerationType(FractalSetGenerationType type);
 	void AddMandelbrotDrawFlags(MandelbrotDrawFlags flags);
@@ -99,6 +101,9 @@ private:
 	// Julia
 	int _juliaStateInt = static_cast<int>(JuliaState::None);
 	sf::Vector2f _juliaC;
+
+	// Polynomial
+	std::array<float, Polynomial::PolynomialDegree> _polynomialConstants{};
 
 	// Shared
 	bool _axis = false;

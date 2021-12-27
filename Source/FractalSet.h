@@ -15,7 +15,8 @@ enum class FractalSetType
 {
 	Mandelbrot,
 	Julia,
-	Buddhabrot
+	Buddhabrot,
+	Polynomial
 };
 
 enum class FractalSetGenerationType
@@ -42,10 +43,10 @@ public:
 	virtual void OnRender(Scene& scene);
 	virtual void OnViewportResize(const sf::Vector2f& size);
 
-	void MarkForImageComputation() noexcept;
-	void MarkForImageRendering() noexcept;
+	void RequestImageComputation() noexcept;
+	void RequestImageRendering() noexcept;
 
-	void AddHost(enum class HostType type, std::unique_ptr<Host> host);
+	void AddHost(std::unique_ptr<Host> host);
 
 	auto Name() const noexcept -> const std::string&;
 	auto Type() const -> FractalSetType;

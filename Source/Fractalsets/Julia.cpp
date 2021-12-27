@@ -30,9 +30,9 @@ Julia::Julia(const sf::Vector2f& renderSize) :
 		return false;
 	};
 
-	AddHost(HostType::Cpu, std::move(cpuHost));
-	AddHost(HostType::GpuComputeShader, std::move(comHost));
-	AddHost(HostType::GpuPixelShader, std::move(pixHost));
+	AddHost(std::move(cpuHost));
+	AddHost(std::move(comHost));
+	AddHost(std::move(pixHost));
 }
 
 void Julia::OnUpdate(Scene& scene)
@@ -70,8 +70,8 @@ void Julia::OnUpdate(Scene& scene)
 
 	if (_currentC != _desiredC)
 	{
-		MarkForImageComputation();
-		MarkForImageRendering();
+		RequestImageComputation();
+		RequestImageRendering();
 	}
 	if (_cTransitionTimer <= _cTransitionDuration && _state == JuliaState::None)
 	{
@@ -197,15 +197,15 @@ auto Julia::TranslatePoint(const sf::Vector2f& point, int iterations) -> sf::Vec
 
 void Julia::SetC(const std::complex<double>& c, bool animate)
 {
-	if (animate && abs(c - _desiredC) > 0.1)
+	if (animate && std::abs(c - _desiredC) > 0.1)
 	{
 		_startC = _currentC;
 		_cTransitionTimer = 0.0f;
 	}
 	else
 	{
-		MarkForImageComputation();
-		MarkForImageRendering();
+		RequestImageComputation();
+		RequestImageRendering();
 	}
 	_currentC = c;
 	_desiredC = c;

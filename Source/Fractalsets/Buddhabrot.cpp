@@ -36,7 +36,7 @@ Buddhabrot::Buddhabrot(const sf::Vector2f& renderSize) :
 		return false;
 	};
 
-	AddHost(HostType::GpuComputeShader, std::move(comHost));
+	AddHost(std::move(comHost));
 
 	// Todo: Fix this
 	/*for (int i = 0; i < 32; i++)

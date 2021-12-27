@@ -5,7 +5,7 @@
 namespace Se
 {
 CpuHost::CpuHost(int simWidth, int simHeight) :
-	Host("CPU", simWidth, simHeight),
+	Host(HostType::Cpu, "CPU", simWidth, simHeight),
 	_vertexArray(sf::PrimitiveType::Points, SimWidth() * SimHeight()),
 	_fractalArray(new int[SimWidth() * SimHeight()])
 {

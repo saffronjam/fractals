@@ -7,7 +7,7 @@
 namespace Se
 {
 PixelShaderHost::PixelShaderHost(const std::filesystem::path& pixelShaderPath, int simWidth, int simHeight) :
-	GpuHost("GPU Pixel Shader", simWidth, simHeight),
+	GpuHost(HostType::GpuPixelShader, "GPU Pixel Shader", simWidth, simHeight),
 	_shader(ShaderStore::Get(pixelShaderPath, sf::Shader::Type::Fragment))
 {
 	_output.create(simWidth, simHeight);

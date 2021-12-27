@@ -6,7 +6,7 @@ namespace Se
 {
 ComputeShaderHost::ComputeShaderHost(const std::filesystem::path& computeShaderPath, int simWidth, int simHeight,
                                      sf::Vector2u dimensions) :
-	GpuHost("GPU Compute Shader", simWidth, simHeight),
+	GpuHost(HostType::GpuComputeShader, "GPU Compute Shader", simWidth, simHeight),
 	_shader(ComputeShaderStore::Get(computeShaderPath)),
 	_dimensions(dimensions)
 {

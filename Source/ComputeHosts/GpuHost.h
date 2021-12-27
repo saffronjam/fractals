@@ -14,7 +14,7 @@ template<class ShaderClass>
 class GpuHost : public Host
 {
 public:
-	GpuHost(std::string name, int simWidth, int simHeight);
+	GpuHost(HostType type, std::string name, int simWidth, int simHeight);
 
 	void OnRender(Scene& scene) override;
 
@@ -34,8 +34,8 @@ protected:
 
 
 template<class ShaderClass>
-GpuHost<ShaderClass>::GpuHost(std::string name, int simWidth, int simHeight) :
-	Host(std::move(name), simWidth, simHeight),
+GpuHost<ShaderClass>::GpuHost(HostType type, std::string name, int simWidth, int simHeight) :
+	Host(type, std::move(name), simWidth, simHeight),
 	_painterPS(ShaderStore::Get("painter.frag", sf::Shader::Type::Fragment))
 {
 	_target.create(simWidth, simHeight);
