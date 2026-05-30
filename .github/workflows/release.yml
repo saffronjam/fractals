@@ -1,0 +1,94 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build-linux:
+    name: Build Linux amd64
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libsfml-dev libgl1-mesa-dev
+
+      - name: Setup Premake
+        uses: abel0b/setup-premake@v1
+
+      - name: Build
+        run: |
+          premake5 gmake2
+          make config=release fractals -j2
+
+      - name: Package
+        run: |
+          mkdir -p dist/fractals-linux-amd64
+          cp -R build/bin/Release-linux-x86_64/fractals/. dist/fractals-linux-amd64/
+          tar -czf dist/fractals-linux-amd64.tar.gz -C dist fractals-linux-amd64
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fractals-linux-amd64
+          path: dist/fractals-linux-amd64.tar.gz
+
+  build-windows:
+    name: Build Windows amd64
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Setup Premake
+        uses: abel0b/setup-premake@v1
+
+      - name: Build
+        shell: pwsh
+        run: |
+          premake5 vs2022
+          MSBuild.exe saffron.sln /property:Configuration=Release /property:Platform=x64
+
+      - name: Package
+        shell: pwsh
+        run: |
+          $source = "build/bin/Release-windows-x86_64/fractals"
+          if (!(Test-Path $source)) {
+            $source = "build/bin/Release-windows-x64/fractals"
+          }
+          New-Item -ItemType Directory -Force -Path dist/fractals-windows-amd64 | Out-Null
+          Copy-Item -Recurse "$source/*" dist/fractals-windows-amd64/
+          Compress-Archive -Path dist/fractals-windows-amd64 -DestinationPath dist/fractals-windows-amd64.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fractals-windows-amd64
+          path: dist/fractals-windows-amd64.zip
+
+  release:
+    name: Create GitHub release
+    needs: [build-linux, build-windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true

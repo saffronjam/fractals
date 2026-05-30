@@ -1,12 +1,12 @@
 ---@diagnostic disable: undefined-global
 
-local ProjectName = "Fractals"
+local ProjectName = "fractals"
 
 local function GetBasePath()
 	return debug.getinfo(1).source:match("@?(.*/)")
 end
 
-workspace "Saffron"
+workspace "saffron"
 	architecture "x64"
 
 	configurations {
@@ -23,7 +23,7 @@ workspace "Saffron"
 
 	startproject (ProjectName)
 
-local SaffronEngine2D = require("ThirdParty.SaffronEngine2D.premake5")
+local saffronEngine2D = dofile("deps/saffron-engine-2d/premake5.lua")
 
 project (ProjectName)
     kind "ConsoleApp"
@@ -31,43 +31,76 @@ project (ProjectName)
     cppdialect "C++20"
 	staticruntime "On"
 
+	filter "system:linux"
+		buildoptions { "-std=c++23" }
+	filter "system:windows"
+		buildoptions { "/std:c++latest" }
+	filter {}
+
+	-- The CPU fractal kernels (via Saffron's SIMD.h) use AVX2 intrinsics.
+	-- MSVC exposes these unconditionally; gcc/clang need the ISA enabled.
+	vectorextensions "AVX2"
+
 	objdir (OutObj)
 	location (OutLoc)
 
     filter "configurations:Debug or Release"
 	    targetdir (OutBin)
-        SaffronEngine2D.PreBuild("Debug", OutBin, PrjLoc)
-        SaffronEngine2D.PostBuild("Debug", OutBin, PrjLoc)
+        saffronEngine2D.PreBuild("Debug", OutBin, PrjLoc)
+        saffronEngine2D.PostBuild("Debug", OutBin, PrjLoc)
 
-        SaffronEngine2D.PreBuild("Release", OutBin, PrjLoc)
-        SaffronEngine2D.PostBuild("Release", OutBin, PrjLoc)
+        saffronEngine2D.PreBuild("Release", OutBin, PrjLoc)
+        saffronEngine2D.PostBuild("Release", OutBin, PrjLoc)
 
     filter "configurations:Dist"
         targetdir (OutBinDist)
-        SaffronEngine2D.PreBuild("Dist", OutBinDist, PrjLoc)
-        SaffronEngine2D.PostBuild("Dist", OutBinDist, PrjLoc)
+        saffronEngine2D.PreBuild("Dist", OutBinDist, PrjLoc)
+        saffronEngine2D.PostBuild("Dist", OutBinDist, PrjLoc)
 
     filter "configurations:Debug or Release or Dist"
 
     files {
-        "Source/**.h",
-		"Source/**.c",
-		"Source/**.hpp",
-		"Source/**.cpp",
-		"Assets/Shaders/**.*",
+        "source/**.h",
+		"source/**.c",
+		"source/**.hpp",
+		"source/**.cpp",
+		"assets/shaders/**.*",
     }
 
     vpaths {
-        ["Shaders"] = { "Assets/Shaders/**.*" }
+        ["Shaders"] = { "assets/shaders/**.*" }
     }
 
     includedirs {
-        "Source",
+        "source",
     }
     
-    SaffronEngine2D.Include()
-    SaffronEngine2D.Link()
-    SaffronEngine2D.AddDefines()
+    saffronEngine2D.Include()
+    saffronEngine2D.Link()
+    saffronEngine2D.AddDefines()
+
+    -- premake propagates the engine static lib to the executable but not the
+    -- engine's external (-l) dependencies, so the final link needs them here.
+    -- On Windows these come from the vendored prebuilts via the engine project.
+    filter "system:linux"
+        libdirs {
+            "deps/saffron-engine-2d/deps/Box2D/lib/linux",
+            "deps/saffron-engine-2d/deps/Glad/lib/linux",
+        }
+        links {
+            "ImGui",
+            "sfml-graphics",
+            "sfml-window",
+            "sfml-audio",
+            "sfml-network",
+            "sfml-system",
+            "Box2D",
+            "Glad",
+            "GL",
+            "dl",
+            "pthread",
+        }
+    filter {}
 
     local from = GetBasePath() .. AstFol
     CopyAssetsToOutput("Debug", from, OutBin .. AstFol, PrjLoc .. AstFol)

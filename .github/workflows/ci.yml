@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  build-linux:
+    name: Build Linux amd64
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libsfml-dev libgl1-mesa-dev
+
+      - name: Setup Premake
+        uses: abel0b/setup-premake@v1
+
+      - name: Generate makefiles
+        run: premake5 gmake2
+
+      - name: Build
+        run: make config=release fractals -j2

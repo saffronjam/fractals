@@ -1,0 +1,113 @@
+#include "host.h"
+
+namespace fractals
+{
+using namespace saffron;
+Host::Host(HostType type, std::string name, int simWidth, int simHeight) :
+	_type(type),
+	_simBox(Position(), Position()),
+	_name(std::move(name)),
+	_simWidth(simWidth),
+	_simHeight(simHeight)
+{
+}
+
+void Host::OnUpdate(Scene& scene)
+{
+	if (_computationRequested)
+	{
+		if (_resizeRequsted)
+		{
+			Resize(_desiredSize.x, _desiredSize.y);
+			_simWidth = _desiredSize.x;
+			_simHeight = _desiredSize.y;
+			_resizeRequsted = false;
+		}
+
+		ComputeImage();
+		_computationRequested = false;
+	}
+
+	if (_renderRequested)
+	{
+		RenderImage();
+		_renderRequested = false;
+	}
+}
+
+void Host::OnViewportResize(const sf::Vector2f& size)
+{
+	RequestResize(size);
+}
+
+auto Host::Name() const -> const std::string&
+{
+	return _name;
+}
+
+auto Host::Type() const -> HostType
+{
+	return _type;
+}
+
+void Host::RequestImageComputation()
+{
+	_computationRequested = true;
+}
+
+void Host::RequestImageRendering()
+{
+	_renderRequested = true;
+}
+
+void Host::RequestResize(const sf::Vector2f& desiredSize)
+{
+	_desiredSize = desiredSize;
+	_resizeRequsted = true;
+}
+
+void Host::SetComputeIterations(uint64_t computeIterations)
+{
+	_computeIterations = computeIterations;
+}
+
+auto Host::SimBox() const -> const struct SimBox&
+{
+	return _simBox;
+}
+
+void Host::SetSimBox(const struct SimBox& simBox)
+{
+	_simBox = simBox;
+}
+
+auto Host::ComputationRequested() const -> bool
+{
+	return _computationRequested;
+}
+
+auto Host::RenderRequested() const -> bool
+{
+	return _renderRequested;
+}
+
+auto Host::ResizeRequsted() const -> bool
+{
+	return _resizeRequsted;
+}
+
+auto Host::ComputeIterations() const -> uint64_t
+{
+	return _computeIterations;
+}
+
+auto Host::SimWidth() const -> int
+{
+	return _simWidth;
+}
+
+auto Host::SimHeight() const -> int
+{
+	return _simHeight;
+}
+}
