@@ -3,6 +3,7 @@ name: Release
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -22,8 +23,24 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential libsfml-dev libgl1-mesa-dev
 
-      - name: Setup Premake
-        uses: abel0b/setup-premake@v1
+
+
+      - name: Setup Premake Linux
+        if: runner.os == 'Linux'
+        run: |
+          curl -fsSL -o premake.tar.gz https://github.com/premake/premake-core/releases/download/v5.0.0-beta7/premake-5.0.0-beta7-linux.tar.gz
+          sudo tar -xzf premake.tar.gz -C /usr/local/bin premake5
+          premake5 --version
+
+      - name: Setup Premake Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Invoke-WebRequest -Uri https://github.com/premake/premake-core/releases/download/v5.0.0-beta7/premake-5.0.0-beta7-windows.zip -OutFile premake.zip
+          Expand-Archive premake.zip -DestinationPath "$env:RUNNER_TEMP/premake" -Force
+          "$env:RUNNER_TEMP/premake" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          & "$env:RUNNER_TEMP/premake/premake5.exe" --version
+
 
       - name: Build
         run: |
@@ -53,8 +70,24 @@ jobs:
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
 
-      - name: Setup Premake
-        uses: abel0b/setup-premake@v1
+
+
+      - name: Setup Premake Linux
+        if: runner.os == 'Linux'
+        run: |
+          curl -fsSL -o premake.tar.gz https://github.com/premake/premake-core/releases/download/v5.0.0-beta7/premake-5.0.0-beta7-linux.tar.gz
+          sudo tar -xzf premake.tar.gz -C /usr/local/bin premake5
+          premake5 --version
+
+      - name: Setup Premake Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Invoke-WebRequest -Uri https://github.com/premake/premake-core/releases/download/v5.0.0-beta7/premake-5.0.0-beta7-windows.zip -OutFile premake.zip
+          Expand-Archive premake.zip -DestinationPath "$env:RUNNER_TEMP/premake" -Force
+          "$env:RUNNER_TEMP/premake" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          & "$env:RUNNER_TEMP/premake/premake5.exe" --version
+
 
       - name: Build
         shell: pwsh
