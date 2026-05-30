@@ -1,4 +1,4 @@
-# source/fractalsets/ — per-fractal compute
+# src/fractalsets/ — per-fractal compute
 
 `Mandelbrot`, `Julia`, `Buddhabrot`, `Polynomial` each subclass `FractalSet` and provide the actual
 escape-time math for every host. The CPU path is **AVX2 SIMD** (4 doubles/iteration) via the engine's

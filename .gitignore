@@ -50,3 +50,5 @@ RelWithDebInfo
 build/
 build/
 out/
+
+ci_premake5.lua

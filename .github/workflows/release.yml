@@ -44,7 +44,7 @@ jobs:
       - name: Build
         run: |
           premake5 gmake2
-          make config=release fractals -j2
+          make -f build/Makefile config=release fractals -j2
 
       - name: Package
         run: |
@@ -91,7 +91,7 @@ jobs:
         shell: pwsh
         run: |
           premake5 vs2022
-          MSBuild.exe saffron.sln /property:Configuration=Release /property:Platform=x64
+          MSBuild.exe build\saffron.sln /property:Configuration=Release /property:Platform=x64
 
       - name: Package
         shell: pwsh

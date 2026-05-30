@@ -60,10 +60,10 @@ project (ProjectName)
     filter "configurations:Debug or Release or Dist"
 
     files {
-        "source/**.h",
-		"source/**.c",
-		"source/**.hpp",
-		"source/**.cpp",
+        "src/**.h",
+		"src/**.c",
+		"src/**.hpp",
+		"src/**.cpp",
 		"assets/shaders/**.*",
     }
 
@@ -72,7 +72,7 @@ project (ProjectName)
     }
 
     includedirs {
-        "source",
+        "src",
     }
     
     saffronEngine2D.Include()

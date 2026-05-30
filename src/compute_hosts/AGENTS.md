@@ -1,8 +1,8 @@
-# source/compute_hosts/ — compute backends
+# src/compute_hosts/ — compute backends
 
-Each `FractalSet` owns one host per `HostType` (`source/host.h`): `Cpu`, `GpuComputeShader`,
+Each `FractalSet` owns one host per `HostType` (`src/host.h`): `Cpu`, `GpuComputeShader`,
 `GpuPixelShader`. The active host's `ComputeImage()` + `RenderImage()`/`OnRender()` produce the
-viewport image. All derive from `Host` (`source/Host.{h,cpp}`).
+viewport image. All derive from `Host` (`src/Host.{h,cpp}`).
 
 | File | Host | How it computes |
 |------|------|-----------------|
