@@ -26,7 +26,8 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           curl -fsSL -o premake.tar.gz https://github.com/premake/premake-core/releases/download/v5.0.0-beta7/premake-5.0.0-beta7-linux.tar.gz
-          sudo tar -xzf premake.tar.gz -C /usr/local/bin premake5
+          tar -xzf premake.tar.gz
+          sudo install -m 0755 premake5 /usr/local/bin/premake5
           premake5 --version
 
       - name: Setup Premake Windows
