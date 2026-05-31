@@ -4,84 +4,70 @@
 
 #include "common.h"
 
-namespace fractals
-{
+namespace fractals {
 using namespace saffron;
-enum class HostType
-{
-	Cpu,
-	GpuComputeShader,
-	GpuPixelShader,
-	Count
+enum class HostType { Cpu, GpuComputeShader, GpuPixelShader, Count };
+
+struct SimBox {
+    Position TopLeft;
+    Position BottomRight;
+
+    SimBox(const Position& topLeft, const Position& bottomRight);
+
+    auto IsEqualTo(const SimBox& other) const -> bool;
+    auto IsDifferentFrom(const SimBox& other) const -> bool;
 };
 
-struct SimBox
-{
-	Position TopLeft;
-	Position BottomRight;
+class Host {
+  public:
+    Host(HostType type, std::string name, int simWidth, int simHeight);
+    virtual ~Host() = default;
 
-	SimBox(const Position& topLeft, const Position& bottomRight);
+    void OnUpdate(Scene& scene);
+    virtual void OnRender(Scene& scene) = 0;
+    virtual void OnViewportResize(const sf::Vector2f& size);
 
-	auto IsEqualTo(const SimBox& other) const -> bool;
-	auto IsDifferentFrom(const SimBox& other) const -> bool;
+    auto Name() const -> const std::string&;
+    auto Type() const -> HostType;
+
+    auto SimBox() const -> const struct SimBox&;
+    void SetSimBox(const struct SimBox& simBox);
+
+    void RequestImageComputation();
+    void RequestImageRendering();
+    void RequestResize(const sf::Vector2f& desiredSize);
+
+    void SetComputeIterations(uint64_t computeIterations);
+
+    template <class HostType> auto As() -> HostType& {
+        return dynamic_cast<HostType&>(*this);
+    }
+
+    template <class HostType> auto As() const -> const HostType& {
+        return const_cast<Host&>(*this).As<HostType>();
+    }
+
+  protected:
+    auto ComputationRequested() const -> bool;
+    auto RenderRequested() const -> bool;
+    auto ResizeRequsted() const -> bool;
+    auto ComputeIterations() const -> uint64_t;
+    auto SimWidth() const -> int;
+    auto SimHeight() const -> int;
+
+    virtual void ComputeImage() = 0;
+    virtual void RenderImage() = 0;
+    virtual void Resize(int width, int height) = 0;
+
+  private:
+    HostType _type;
+    bool _computationRequested = true;
+    bool _renderRequested = true;
+    bool _resizeRequsted = true;
+    std::string _name;
+    sf::Vector2f _desiredSize;
+    uint64_t _computeIterations = 64;
+    struct SimBox _simBox;
+    int _simWidth = 0, _simHeight = 0;
 };
-
-
-class Host
-{
-public:
-	Host(HostType type, std::string name, int simWidth, int simHeight);
-	virtual ~Host() = default;
-
-	void OnUpdate(Scene& scene);
-	virtual void OnRender(Scene& scene) = 0;
-	virtual void OnViewportResize(const sf::Vector2f& size);
-
-	auto Name() const -> const std::string&;
-	auto Type() const -> HostType;
-
-	auto SimBox() const -> const struct SimBox&;
-	void SetSimBox(const struct SimBox& simBox);
-
-	void RequestImageComputation();
-	void RequestImageRendering();
-	void RequestResize(const sf::Vector2f& desiredSize);
-
-	void SetComputeIterations(uint64_t computeIterations);
-
-	template <class HostType>
-	auto As() -> HostType&
-	{
-		return dynamic_cast<HostType&>(*this);
-	}
-
-	template <class HostType>
-	auto As() const -> const HostType&
-	{
-		return const_cast<Host&>(*this).As<HostType>();
-	}
-
-protected:
-	auto ComputationRequested() const -> bool;
-	auto RenderRequested() const -> bool;
-	auto ResizeRequsted() const -> bool;
-	auto ComputeIterations() const -> uint64_t;
-	auto SimWidth() const -> int;
-	auto SimHeight() const -> int;
-
-	virtual void ComputeImage() = 0;
-	virtual void RenderImage() = 0;
-	virtual void Resize(int width, int height) = 0;
-
-private:
-	HostType _type;
-	bool _computationRequested = true;
-	bool _renderRequested = true;
-	bool _resizeRequsted = true;
-	std::string _name;
-	sf::Vector2f _desiredSize;
-	uint64_t _computeIterations = 64;
-	struct SimBox _simBox;
-	int _simWidth = 0, _simHeight = 0;
-};
-}
+} // namespace fractals

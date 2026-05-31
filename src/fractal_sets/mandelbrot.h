@@ -2,47 +2,42 @@
 
 #include <saffron.h>
 
-#include "fractal_set.h"
 #include "compute_hosts/cpu_host.h"
+#include "fractal_set.h"
 
-namespace fractals
-{
+namespace fractals {
 using namespace saffron;
 typedef uint MandelbrotDrawFlags;
 
-enum MandelbrotDrawFlags_ : uint
-{
-	MandelbrotDrawFlags_None = 0u,
-	MandelbrotDrawFlags_ComplexLines = 1u << 0u,
-	MandelbrotDrawFlags_All = 0xffffffff
+enum MandelbrotDrawFlags_ : uint {
+    MandelbrotDrawFlags_None = 0u,
+    MandelbrotDrawFlags_ComplexLines = 1u << 0u,
+    MandelbrotDrawFlags_All = 0xffffffff
 };
 
-class Mandelbrot : public FractalSet
-{
-public:
-	explicit Mandelbrot(const sf::Vector2f& renderSize);
-	~Mandelbrot() override = default;
+class Mandelbrot : public FractalSet {
+  public:
+    explicit Mandelbrot(const sf::Vector2f& renderSize);
+    ~Mandelbrot() override = default;
 
-	void OnRender(Scene& scene) override;
-	void OnViewportResize(const sf::Vector2f& size) override;
+    void OnRender(Scene& scene) override;
+    void OnViewportResize(const sf::Vector2f& size) override;
 
-	auto DrawFlags() const -> MandelbrotDrawFlags;
-	void SetDrawFlags(MandelbrotDrawFlags state) noexcept;
+    auto DrawFlags() const -> MandelbrotDrawFlags;
+    void SetDrawFlags(MandelbrotDrawFlags state) noexcept;
 
-	static auto TranslatePoint(const sf::Vector2f& point, int iterations)->sf::Vector2f;
+    static auto TranslatePoint(const sf::Vector2f& point, int iterations) -> sf::Vector2f;
 
-private:
-	void UpdateComputeShaderUniforms(ComputeShader& shader);
-	void UpdatePixelShaderUniforms(sf::Shader& shader);
+  private:
+    void UpdateComputeShaderUniforms(ComputeShader& shader);
+    void UpdatePixelShaderUniforms(sf::Shader& shader);
 
-private:
+  private:
+    MandelbrotDrawFlags _drawFlags;
 
-	MandelbrotDrawFlags _drawFlags;
-
-private:
-	struct MandelbrotWorker : Worker
-	{
-		void Compute() override;
-	};
+  private:
+    struct MandelbrotWorker : Worker {
+        void Compute() override;
+    };
 };
-}
+} // namespace fractals

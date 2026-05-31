@@ -1,6 +1,5 @@
 #include "common.h"
 
-namespace fractals
-{
+namespace fractals {
 using namespace saffron;
 }

@@ -6,19 +6,17 @@
 
 #include "layers/project_layer.h"
 
-namespace fractals
-{
+namespace fractals {
 using namespace saffron;
-class ProjectApp : public App
-{
-public:
-	explicit ProjectApp(const AppProperties& properties);
+class ProjectApp : public App {
+  public:
+    explicit ProjectApp(const AppProperties& properties);
 
-	void OnInit() override;
+    void OnInit() override;
 
-	void OnUpdate() override;
+    void OnUpdate() override;
 
-private:
-	std::shared_ptr<ProjectLayer> _projectLayer;
+  private:
+    std::shared_ptr<ProjectLayer> _projectLayer;
 };
-}
+} // namespace fractals
