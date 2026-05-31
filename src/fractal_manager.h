@@ -85,14 +85,11 @@ class FractalManager {
     // Animate camera movement
     Position _desiredCameraPos;
     Position _startPos;
-    double _positionTransitionDuration = 0.9;
-    double _positionTransitionTimer = _positionTransitionDuration + 1.0;
+    double _transitionDuration = 1.0;
+    double _transitionTimer = _transitionDuration + 1.0;
 
     double _desiredZoom = 0.0;
-    double _desiredZoomLater = 0.0;
     double _startZoom = 0.0;
-    double _zoomTransitionDuration = 2.0;
-    double _zoomTransitionTimer = _zoomTransitionDuration + 1.0;
 
     // Common
     bool _manualSetIterations = false;
