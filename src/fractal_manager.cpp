@@ -41,25 +41,40 @@ void FractalManager::OnUpdate(Scene& scene) {
     }
 
     bool autoMove = false;
-    if (_transitionTimer <= _transitionDuration) {
+    if (_zoomTransitionTimer <= _zoomTransitionDuration) {
         autoMove = true;
-        const auto progress = std::clamp(_transitionTimer / _transitionDuration, 0.0, 1.0);
-        const auto delta = progress * progress * (3.0 - 2.0 * progress);
+        const auto delta =
+            (std::sin(_zoomTransitionTimer / _zoomTransitionDuration * PI<double> - PI<double> / 2.0) + 1.0) / 2.0;
         const auto startLogZoom = std::log2(_startZoom);
         const auto desiredLogZoom = std::log2(_desiredZoom);
         const auto zoom = std::exp2(startLogZoom + delta * (desiredLogZoom - startLogZoom));
 
-        _cameraPosition = _startPos + delta * (_desiredCameraPos - _startPos);
-        _cameraPositionTransform = Transform<double>().Translate(_cameraPosition);
         _cameraZoom = Position{zoom, zoom};
         _cameraZoomTransform = Transform<double>().Scale(_cameraZoom);
-        _transitionTimer += Global::Clock::FrameTime().asSeconds();
+        _zoomTransitionTimer += Global::Clock::FrameTime().asSeconds();
 
-        if (_transitionTimer > _transitionDuration) {
-            _cameraPosition = _desiredCameraPos;
-            _cameraPositionTransform = Transform<double>().Translate(_cameraPosition);
+        if (_zoomTransitionTimer > _zoomTransitionDuration) {
             _cameraZoom = Position{_desiredZoom, _desiredZoom};
             _cameraZoomTransform = Transform<double>().Scale(_cameraZoom);
+        }
+    } else if (_positionTransitionTimer <= _positionTransitionDuration) {
+        autoMove = true;
+        const auto delta =
+            (std::sin(_positionTransitionTimer / _positionTransitionDuration * PI<double> - PI<double> / 2.0) + 1.0) /
+            2.0;
+
+        _cameraPosition = _startPos + delta * (_desiredCameraPos - _startPos);
+        _cameraPositionTransform = Transform<double>().Translate(_cameraPosition);
+        _positionTransitionTimer += Global::Clock::FrameTime().asSeconds();
+
+        if (_positionTransitionTimer > _positionTransitionDuration) {
+            _cameraPosition = _desiredCameraPos;
+            _cameraPositionTransform = Transform<double>().Translate(_cameraPosition);
+
+            _zoomTransitionTimer = 0.0;
+            _desiredZoom = _desiredZoomLater;
+            _startZoom = _cameraZoom.x;
+            _zoomTransitionDuration = CalculateZoomTransitionDuration(_startZoom, _desiredZoom);
         }
     }
 
@@ -597,22 +612,27 @@ void FractalManager::UpdateTransform() {
 }
 
 void FractalManager::MoveCameraTo(Position position, double zoom) {
-    constexpr double minDuration = 2.0;
-    constexpr double maxZoomStopsPerSecond = 2.8;
-
+    _positionTransitionTimer = 0.0;
     _desiredCameraPos = position;
     _startPos = _cameraPosition;
 
-    _transitionTimer = 0.0;
-    _desiredZoom = zoom;
+    _zoomTransitionTimer = 0.0;
+    _desiredZoom = 200.0;
+    _desiredZoomLater = zoom;
     _startZoom = _cameraZoom.x;
-
-    const auto zoomStops = std::abs(std::log2(_desiredZoom / _startZoom));
-    _transitionDuration = std::max(minDuration, zoomStops / maxZoomStopsPerSecond);
+    _zoomTransitionDuration = CalculateZoomTransitionDuration(_startZoom, _desiredZoom);
 }
 
 void FractalManager::ResetCamera() {
     MoveCameraTo({0.0, 0.0}, 200.0);
+}
+
+auto FractalManager::CalculateZoomTransitionDuration(double startZoom, double desiredZoom) const -> double {
+    constexpr double minDuration = 0.9;
+    constexpr double maxZoomStopsPerSecond = 2.8;
+
+    const auto zoomStops = std::abs(std::log2(desiredZoom / startZoom));
+    return std::max(minDuration, zoomStops / maxZoomStopsPerSecond);
 }
 
 auto FractalManager::GenerateSimBox(const Camera& camera) const -> SimBox {
