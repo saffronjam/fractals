@@ -74,7 +74,7 @@ jobs:
         shell: pwsh
         run: |
           premake5 vs2022
-          MSBuild.exe build\saffron.sln /property:Configuration=Release /property:Platform=x64
+          MSBuild.exe saffron.sln /property:Configuration=Release /property:Platform=x64
 
       - name: Package
         shell: pwsh
