@@ -4,16 +4,24 @@ on:
   push:
     tags: ["v*"]
   workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to create or update
+        required: true
+        type: string
 
 permissions:
   contents: write
+
+env:
+  RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
 
 jobs:
   build-linux:
     name: Build Linux amd64
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
           fetch-depth: 0
@@ -23,28 +31,14 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential libsfml-dev libgl1-mesa-dev
 
-
-
       - name: Setup Premake Linux
-        if: runner.os == 'Linux'
         run: |
           curl -fsSL -o premake.tar.gz https://github.com/premake/premake-core/releases/download/v5.0.0-beta7/premake-5.0.0-beta7-linux.tar.gz
           tar -xzf premake.tar.gz
           sudo install -m 0755 premake5 /usr/local/bin/premake5
 
-      - name: Setup Premake Windows
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          Invoke-WebRequest -Uri https://github.com/premake/premake-core/releases/download/v5.0.0-beta7/premake-5.0.0-beta7-windows.zip -OutFile premake.zip
-          Expand-Archive premake.zip -DestinationPath "$env:RUNNER_TEMP/premake" -Force
-          "$env:RUNNER_TEMP/premake" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-
-
       - name: Build
-        run: |
-          premake5 gmake2
-          make -f build/Makefile config=release fractals -j2
+        run: make build config=release jobs=2
 
       - name: Package
         run: |
@@ -52,7 +46,7 @@ jobs:
           cp -R build/bin/Release-linux-x86_64/fractals/. dist/fractals-linux-amd64/
           tar -czf dist/fractals-linux-amd64.tar.gz -C dist fractals-linux-amd64
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: fractals-linux-amd64
           path: dist/fractals-linux-amd64.tar.gz
@@ -61,31 +55,20 @@ jobs:
     name: Build Windows amd64
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
           fetch-depth: 0
 
       - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v2
-
-
-
-      - name: Setup Premake Linux
-        if: runner.os == 'Linux'
-        run: |
-          curl -fsSL -o premake.tar.gz https://github.com/premake/premake-core/releases/download/v5.0.0-beta7/premake-5.0.0-beta7-linux.tar.gz
-          tar -xzf premake.tar.gz
-          sudo install -m 0755 premake5 /usr/local/bin/premake5
+        uses: microsoft/setup-msbuild@v3
 
       - name: Setup Premake Windows
-        if: runner.os == 'Windows'
         shell: pwsh
         run: |
           Invoke-WebRequest -Uri https://github.com/premake/premake-core/releases/download/v5.0.0-beta7/premake-5.0.0-beta7-windows.zip -OutFile premake.zip
           Expand-Archive premake.zip -DestinationPath "$env:RUNNER_TEMP/premake" -Force
           "$env:RUNNER_TEMP/premake" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-
 
       - name: Build
         shell: pwsh
@@ -104,7 +87,7 @@ jobs:
           Copy-Item -Recurse "$source/*" dist/fractals-windows-amd64/
           Compress-Archive -Path dist/fractals-windows-amd64 -DestinationPath dist/fractals-windows-amd64.zip
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: fractals-windows-amd64
           path: dist/fractals-windows-amd64.zip
@@ -114,12 +97,13 @@ jobs:
     needs: [build-linux, build-windows]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           path: dist
           merge-multiple: true
 
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v3
         with:
+          tag_name: ${{ env.RELEASE_TAG }}
           files: dist/*
           generate_release_notes: true

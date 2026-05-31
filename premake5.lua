@@ -33,6 +33,7 @@ project (ProjectName)
 
 	filter "system:linux"
 		buildoptions { "-std=c++23" }
+		linkoptions { "-no-pie" }
 	filter "system:windows"
 		buildoptions { "/std:c++latest" }
 	filter {}
