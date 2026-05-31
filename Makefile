@@ -1,6 +1,12 @@
 PROJECT := $(notdir $(CURDIR))
 config ?= release
+jobs ?= $(shell nproc 2>/dev/null || echo 4)
 PREMAKE ?= $(or $(wildcard $(HOME)/tools/premake5),premake5)
+CCACHE := $(shell command -v ccache 2>/dev/null)
+
+ifneq ($(CCACHE),)
+	BUILD_ENV := CCACHE_CPP2=yes CC="$(CCACHE) gcc" CXX="$(CCACHE) g++"
+endif
 
 CONFIG_NAME := $(shell printf '%s' "$(config)" | awk '{ print toupper(substr($$0,1,1)) substr($$0,2) }')
 UNAME_S := $(shell uname -s 2>/dev/null || echo Windows)
@@ -26,9 +32,10 @@ configure:
 	mv Makefile build/Makefile; \
 	cp $$tmp Makefile; chmod 0644 Makefile; \
 	rm -f $$tmp
+	@if [ -d build/obj ] && grep -Rqs 'source/' build/obj; then rm -rf build/obj; fi
 
 build: configure
-	$(MAKE) --no-print-directory -f build/Makefile config=$(config) $(PROJECT)
+	$(BUILD_ENV) $(MAKE) --no-print-directory -f build/Makefile config=$(config) $(PROJECT) -j$(jobs)
 
 run: build
 	cd $(BIN_DIR) && ./$(PROJECT)$(EXE_EXT)
