@@ -29,7 +29,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential libsfml-dev libgl1-mesa-dev
+          sudo apt-get install -y build-essential libsfml-dev libgl1-mesa-dev patchelf
 
       - name: Setup Premake Linux
         run: |
@@ -42,8 +42,21 @@ jobs:
 
       - name: Package
         run: |
-          mkdir -p dist/fractals-linux-amd64
-          cp -R build/bin/Release-linux-x86_64/fractals/. dist/fractals-linux-amd64/
+          package_dir="dist/fractals-linux-amd64"
+          binary="$package_dir/fractals"
+          mkdir -p "$package_dir/lib"
+          cp -R build/bin/Release-linux-x86_64/fractals/. "$package_dir/"
+          ldd "$binary" | awk '/=> \/.*\// { print $3 }' | while read -r lib; do
+            name="$(basename "$lib")"
+            case "$name" in
+              ld-linux-*|libc.so.*|libm.so.*|libpthread.so.*|libdl.so.*|librt.so.*|libresolv.so.*)
+                continue
+                ;;
+            esac
+            cp -L -n "$lib" "$package_dir/lib/"
+          done
+          patchelf --set-rpath '$ORIGIN/lib' "$binary"
+          find "$package_dir/lib" -type f -name '*.so*' -exec patchelf --set-rpath '$ORIGIN' {} \;
           tar -czf dist/fractals-linux-amd64.tar.gz -C dist fractals-linux-amd64
 
       - uses: actions/upload-artifact@v7
