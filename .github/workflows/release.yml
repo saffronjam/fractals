@@ -81,14 +81,19 @@ jobs:
           [Desktop Entry]
           Type=Application
           Name=${app_name}
+          GenericName=${app_name}
+          Comment=${app_name}
           Exec=AppRun
           Icon=${app_id}
           Categories=Game;
           Terminal=false
+          StartupNotify=true
+          StartupWMClass=${app_id}
           EOF
           cp "$appdir/${app_id}.desktop" "$appdir/usr/share/applications/${app_id}.desktop"
 
           cp docs/preview0.png "$appdir/${app_id}.png"
+          cp docs/preview0.png "$appdir/.DirIcon"
           cp docs/preview0.png "$appdir/usr/share/icons/hicolor/256x256/apps/${app_id}.png"
 
           APPIMAGE_EXTRACT_AND_RUN=1 ./appimagetool "$appdir" "$appimage"
