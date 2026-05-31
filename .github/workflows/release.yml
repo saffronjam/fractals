@@ -107,3 +107,4 @@ jobs:
           tag_name: ${{ env.RELEASE_TAG }}
           files: dist/*
           generate_release_notes: true
+          overwrite_files: true
