@@ -91,7 +91,7 @@ class FractalManager {
     double _desiredZoom = 0.0;
     double _desiredZoomLater = 0.0;
     double _startZoom = 0.0;
-    double _zoomTransitionDuration = 0.9;
+    double _zoomTransitionDuration = 2.0;
     double _zoomTransitionTimer = _zoomTransitionDuration + 1.0;
 
     // Common
