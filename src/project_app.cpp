@@ -6,7 +6,7 @@ namespace saffron
 {
 auto CreateApplication() -> std::unique_ptr<App>
 {
-	return std::make_unique<fractals::ProjectApp>(AppProperties::CreateCentered("fractals", 1024, 720));
+	return std::make_unique<fractals::ProjectApp>(AppProperties::CreateMaximized("fractals"));
 }
 }
 
